@@ -24,6 +24,8 @@ class ChangedWidgetAttribute(Enum):
     AlignRight = 15
     PaperColor = 16
 
+    Strikethrough = 17
+
 
 # Cant be statically typed because importing the classes causes circular imports
 

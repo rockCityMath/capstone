@@ -31,7 +31,27 @@ class Editor(QMainWindow):
         self.autosaver = Autosaver(self) # Waits for change signals and saves the notebook
         self.setFocus()
 
+        self.settings = QSettings("UNT - Team Olive", "OpenNote")
+
         build_ui(self)
+
+    def closeEvent(self, event):
+        # Save window size and position before exiting
+
+        print("Window closing event triggered")
+        
+        self.settings.setValue("geometry", self.saveGeometry())
+        self.settings.setValue("windowState", self.saveState())
+        super().closeEvent(event)
+
+    def showEvent(self, event):
+        # Restores window size and position
+
+        print("Window showing event triggered")
+
+        self.restoreGeometry(self.settings.value("geometry", self.saveGeometry())) 
+        self.restoreState(self.settings.value("windowState", self.saveState()))
+        super().showEvent(event)
     # def focusInEvent(self, event):
     #     self.repaint()
         

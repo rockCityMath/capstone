@@ -84,6 +84,11 @@ def build_ui(editor):
 
     editor.setCentralWidget(centralWidget)
 
+    #Saves window size 
+    #editor.restoreGeometry(editor.settings.value("geometry", editor.saveGeometry()))
+    #editor.restoreState(editor.settings.value("windowState", editor.saveState()))
+
+
 class build_titlebar(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
@@ -271,6 +276,9 @@ def build_toolbar(editor):
 
     underline = build_action(editor.homeToolbar, './Assets/icons/underline.svg', "Underline", "Underline", True)
     underline.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontUnderline, None))
+
+    strikethrough = build_action(editor.homeToolbar, './Assets/icons/svg_strikethrough.svg', "Strikethrough", "Strikethrough", True)
+    strikethrough.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Strikethrough, None))
     
     # Bullets with placeholder for more bullet options
     bullet = build_action(editor.homeToolbar, './Assets/icons/svg_bullets', "Bullets", "Bullets", False)
@@ -288,7 +296,7 @@ def build_toolbar(editor):
     
     editor.homeToolbar.addSeparator()
     
-    editor.homeToolbar.addActions([bold, italic, underline, fontColor, textHighlightColor, bgColor, paperColor, bullet])
+    editor.homeToolbar.addActions([bold, italic, underline, strikethrough, fontColor, textHighlightColor, bgColor, paperColor, bullet])
 
 
     # numbering menu start

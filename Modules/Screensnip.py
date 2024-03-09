@@ -83,9 +83,11 @@ class SnippingWidget(QWidget):
 
         try:
             if platform == "darwin":
-                img = ImageGrab.grab(bbox=( (x1 ) * 2, (y1 + 55 ) * 2, (x2 ) * 2, (y2 + 55) * 2))
+                #img = ImageGrab.grab(bbox=( (x1 ) * 2, (y1 + 55 ) * 2, (x2 ) * 2, (y2 + 55) * 2)) [may be needed for different mac version - testing in progress]
+                img = ImageGrab.grab(bbox=(x1, y1 + 55, x2, y2 + 55)) # For mac version 14.1.2
             else:
                 img = ImageGrab.grab(bbox=(x1 + 2, y1 + 2, x2 - 1, y2 - 1))
+
         except Exception as e:
             print(f"Error grabbing screenshot: {e}")
             img = None

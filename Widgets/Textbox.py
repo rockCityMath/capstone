@@ -148,6 +148,12 @@ class TextboxWidget(QTextBrowser):
             lambda x: self.setFontUnderlineCustom(True if x else False)
         )
 
+        strikethrough = build_action(
+            toolbarBottom,"./Assets/icons/svg_strikethrough", "Srikethrough", "Srikethrough", True
+            )
+        strikethrough.toggled.connect(lambda: self.setStrikeOut())
+
+
         fontColor = build_action(
             toolbarBottom,
             "./Assets/icons/svg_font_color",
@@ -194,6 +200,7 @@ class TextboxWidget(QTextBrowser):
                 bold,
                 italic,
                 underline,
+                strikethrough,
                 textHighlightColor,
                 fontColor, 
                 bullets
@@ -584,3 +591,19 @@ class TextboxWidget(QTextBrowser):
 
                 cursor.movePosition(QTextCursor.Start)
                 self.setTextCursor(cursor)
+
+    def setStrikeOut(self):
+        print("strikeout event")
+        cursor = self.textCursor()
+        format = cursor.charFormat()
+
+        # Toggle strikethrough
+        format.setFontStrikeOut(not format.fontStrikeOut())
+
+        # Apply the new format to the selected text
+        #cursor.mergeCharFormat(format)
+        cursor.setCharFormat(format)
+
+        #cursor.movePosition(QTextCursor.End)
+        self.setTextCursor(cursor)
+        #self.setFocus()

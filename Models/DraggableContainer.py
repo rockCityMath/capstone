@@ -418,6 +418,10 @@ class DraggableContainer(QWidget):
             print("Change Font Underline Event Called")
             child_widget.changeFontUnderlineEvent()
 
+        elif hasattr(child_widget, "setStrikeOut") and (changedWidgetAttribute == ChangedWidgetAttribute.Strikethrough):
+            print("Change strikethroughEvent called")
+            child_widget.setStrikeOut()
+
         elif hasattr(child_widget, "changeFontEvent") and (changedWidgetAttribute == ChangedWidgetAttribute.Font):
             print("Change Font Family Event Called")
             child_widget.changeFontEvent(value)
