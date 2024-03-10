@@ -260,6 +260,26 @@ class EditorFrameView(QWidget):
             editorSignalsInstance.widgetAdded.emit(dc)
             editorSignalsInstance.changeMade.emit()
 
+    def insertDate(self, clickPos):
+        current_date = QDateTime.currentDateTime().toString("M/d/yyyy")
+        textboxWidget = TextboxWidget.new(clickPos)
+        textboxWidget.insertPlainText(current_date) 
+        dc = DraggableContainer(textboxWidget, self)
+        dc.show()
+        self.undoHandler.pushCreate(dc)
+        editorSignalsInstance.widgetAdded.emit(dc)
+        editorSignalsInstance.changeMade.emit()
+
+    def insertTime(self, clickPos):
+        current_time = QDateTime.currentDateTime().toString("h:mm AP")
+        textboxWidget = TextboxWidget.new(clickPos)
+        textboxWidget.insertPlainText(current_time)
+        dc = DraggableContainer(textboxWidget, self)
+        dc.show()
+        self.undoHandler.pushCreate(dc)
+        editorSignalsInstance.widgetAdded.emit(dc)
+        editorSignalsInstance.changeMade.emit()
+
     def center_of_screen(self):
         editor_frame_geometry = self.editorFrame.geometry()
         print(f"editor_frame_geometry.width() is {editor_frame_geometry.width()}")
@@ -292,6 +312,18 @@ class EditorFrameView(QWidget):
         center_x, center_y = self.center_of_screen()
         clickPos = QPoint(center_x, center_y)
         self.insertLink(clickPos)
+
+    def toolbar_date(self):
+        print("toolbar_date pressed")
+        center_x, center_y = self.center_of_screen()
+        clickPos = QPoint(center_x, center_y)
+        self.insertDate(clickPos)
+
+    def toolbar_time(self):
+        print("toolbar_time pressed")
+        center_x, center_y = self.center_of_screen()
+        clickPos = QPoint(center_x, center_y)
+        self.insertTime(clickPos)
 
     def addCustomWidget(self, e):
         def getCustomWidgets():

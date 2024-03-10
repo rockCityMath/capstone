@@ -363,6 +363,24 @@ def build_toolbar(editor):
 
     hyperlink = build_button(editor.insertToolbar, './Assets/icons/svg_hyperlink', " Hyperlink ", "Hyperlink", False)
     hyperlink.clicked.connect(editor.frameView.toolbar_hyperlink)
+
+    # date and time menu start
+    dateTime_menu = QMenu(editor)
+    
+    date = build_action(dateTime_menu, './Assets/icons/svg_date', "Date", "Date", False)
+    date.triggered.connect(editor.frameView.toolbar_date)
+    
+    time = build_action(dateTime_menu, './Assets/icons/svg_time', "Time", "Time", False)
+    time.triggered.connect(editor.frameView.toolbar_time)
+    
+    dateTime_menu.addActions([date, time])
+
+    # cant directly add numbering menu to homeToolbar so this is required 
+    dateTime = QToolButton(editor)
+    dateTime.setIcon(QIcon('./Assets/icons/svg_dateTime'))
+    dateTime.setIconSize(QSize(18,18))
+    dateTime.setPopupMode(QToolButton.InstantPopup)
+    dateTime.setMenu(dateTime_menu)
     
     editor.insertToolbar.addWidget(table) 
     
@@ -379,6 +397,8 @@ def build_toolbar(editor):
     
     editor.insertToolbar.addWidget(hyperlink)
     editor.insertToolbar.addSeparator()
+
+    editor.insertToolbar.addWidget(dateTime)
     
     # drawToolbar code
     editor.drawToolbar = QToolBar()

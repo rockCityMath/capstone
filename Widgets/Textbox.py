@@ -149,7 +149,7 @@ class TextboxWidget(QTextBrowser):
         )
 
         strikethrough = build_action(
-            toolbarBottom,"./Assets/icons/svg_strikethrough", "Srikethrough", "Srikethrough", True
+            toolbarBottom,"./Assets/icons/svg_strikethrough", "Strikethrough", "Strikethrough", True
             )
         strikethrough.toggled.connect(lambda: self.setStrikeOut())
 
@@ -200,7 +200,7 @@ class TextboxWidget(QTextBrowser):
                 bold,
                 italic,
                 underline,
-                strikethrough,
+                # strikethrough,
                 textHighlightColor,
                 fontColor, 
                 bullets

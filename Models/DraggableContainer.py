@@ -182,7 +182,8 @@ class DraggableContainer(QWidget):
         
         orderMenu.addAction(bringForwards)
         
-        menu.addMenu(orderMenu)
+        # not ready for deployment
+        # menu.addMenu(orderMenu)
             
         # text boxes
         if isinstance(self.childWidget, QTextBrowser):
