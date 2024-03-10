@@ -88,7 +88,6 @@ def build_ui(editor):
     #editor.restoreGeometry(editor.settings.value("geometry", editor.saveGeometry()))
     #editor.restoreState(editor.settings.value("windowState", editor.saveState()))
 
-
 class build_titlebar(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
@@ -97,14 +96,16 @@ class build_titlebar(QWidget):
         self.setStyleSheet(
             """
                 background-color: rgb(119, 25, 170);
-                height: 50px;
             """
         )
         self.initial_pos = None
 
-        title_bar_layout = QHBoxLayout(self)
-        title_bar_layout.setContentsMargins(0, 0, 0, 0)
-        title_bar_layout.setSpacing(0)
+        titlebarLayout = QHBoxLayout(self)
+        titlebarLayout.setContentsMargins(0, 0, 0, 0)
+        titlebarLayout.setSpacing(0)
+        
+        self.logo = build_titlebutton('./Assets/White-OpenNoteLogo', None)
+        titlebarLayout.addWidget(self.logo)
 
         self.title = QLabel(f"{self.__class__.__name__}", self)
         self.title.setStyleSheet(
@@ -115,65 +116,27 @@ class build_titlebar(QWidget):
         self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         if title := parent.windowTitle():
             self.title.setText(title)
-        title_bar_layout.addWidget(self.title)   
-
-        # Min button
-        self.min_button = QToolButton(self)
-        min_icon = self.style().standardIcon(
-            QStyle.StandardPixmap.SP_TitleBarMinButton
-        )
-        self.min_button.setIcon(min_icon)
-        self.min_button.clicked.connect(self.window().showMinimized)
-
-        # Max button
-        self.max_button = QToolButton(self)
-        max_icon = self.style().standardIcon(
-            QStyle.StandardPixmap.SP_TitleBarMaxButton
-        )
-        self.max_button.setIcon(max_icon)
-        self.max_button.clicked.connect(self.window().showMaximized)
-
-        # Close button
-        self.close_button = QToolButton(self)
-        close_icon = self.style().standardIcon(
-            QStyle.StandardPixmap.SP_TitleBarCloseButton
-        )
-        self.close_button.setIcon(close_icon)
-        self.close_button.clicked.connect(self.window().close)
+        titlebarLayout.addWidget(self.title)   
         
-        # Normal button
-        self.normal_button = QToolButton(self)
-        normal_icon = self.style().standardIcon(
-            QStyle.StandardPixmap.SP_TitleBarNormalButton
-        )
-        self.normal_button.setIcon(normal_icon)
-        self.normal_button.clicked.connect(self.window().showNormal)
-        self.normal_button.setVisible(False)
+        self.tray = build_titlebutton('./Assets/icons/svg_tray', self.window().showMinimized)
+        self.windowed = build_titlebutton('./Assets/icons/svg_windowed', self.window().showMaximized)
+        self.close = build_titlebutton('./Assets/icons/svg_close', self.window().close)
+        self.fullscreen = build_titlebutton('./Assets/icons/svg_fullscreen', self.window().showNormal)
+        self.fullscreen.setVisible(False)
         
-        # Add buttons             
-        buttons = [
-            self.min_button,
-            self.normal_button,
-            self.max_button,
-            self.close_button,
-        ]
-        for button in buttons:
-            button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-            button.setFixedSize(QSize(28, 28))
-            button.setStyleSheet(
-                """QToolButton { color: white;
-                }
-                """
-            )
-            title_bar_layout.addWidget(button)
-
+        titlebarLayout.addWidget(self.tray)
+        titlebarLayout.addWidget(self.fullscreen)
+        titlebarLayout.addWidget(self.windowed)
+        titlebarLayout.addWidget(self.close)
+        
     def window_state_changed(self, state):
         if state == Qt.WindowMaximized:
-            self.normal_button.setVisible(True)
-            self.max_button.setVisible(False)
+            self.fullscreen.setVisible(True)
+            self.windowed.setVisible(False)
         else:
-            self.normal_button.setVisible(False)
-            self.max_button.setVisible(True)
+            self.fullscreen.setVisible(False)
+            self.windowed.setVisible(True)
+
 
 def build_menubar(editor):
     editor.menubar = editor.menuBar()
@@ -313,14 +276,9 @@ def build_toolbar(editor):
     bulletUpperR.triggered.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.BulletUR, None))
 
     numbering_menu.addActions([bullet_num, bulletUpperA, bulletUpperR])
-
-    # cant directly add numbering menu to homeToolbar so this is required 
-    numbering = QToolButton(editor)
-    numbering.setIcon(QIcon('./Assets/icons/svg_bullet_number'))
-    numbering.setIconSize(QSize(18,18))
-    numbering.setPopupMode(QToolButton.InstantPopup)
-    numbering.setMenu(numbering_menu)
     
+    numbering = build_menubutton(editor, './Assets/icons/svg_bullet_number', "", "Numbering", numbering_menu)
+   
     editor.homeToolbar.addWidget(numbering)
     
     # QActionGroup used to display that only one can be toggled at a time
@@ -374,13 +332,9 @@ def build_toolbar(editor):
     time.triggered.connect(editor.frameView.toolbar_time)
     
     dateTime_menu.addActions([date, time])
-
-    # cant directly add numbering menu to homeToolbar so this is required 
-    dateTime = QToolButton(editor)
-    dateTime.setIcon(QIcon('./Assets/icons/svg_dateTime'))
-    dateTime.setIconSize(QSize(18,18))
-    dateTime.setPopupMode(QToolButton.InstantPopup)
-    dateTime.setMenu(dateTime_menu)
+    
+    dateTime = build_menubutton(editor, './Assets/icons/svg_dateTime', "Date & Time", "Date & Time", dateTime_menu)
+    
     
     editor.insertToolbar.addWidget(table) 
     
@@ -448,10 +402,10 @@ def openGetColorDialog(purpose):
         elif purpose == "background":
             editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.BackgroundColor, color)
 
-def build_action(parent, icon_path, action_name, set_status_tip, set_checkable):
+def build_action(parent, icon_path, action_name, tooltip, checkable):
     action = QAction(QIcon(icon_path), action_name, parent)
-    action.setStatusTip(set_status_tip)
-    action.setCheckable(set_checkable)
+    action.setStatusTip(tooltip)
+    action.setCheckable(checkable)
     return action
     
 def build_button(parent, icon_path, text, tooltip, checkable):
@@ -460,4 +414,24 @@ def build_button(parent, icon_path, text, tooltip, checkable):
     button.setText(text)
     button.setToolTip(tooltip)
     button.setCheckable(checkable)
+    return button
+
+def build_menubutton(parent, icon_path, text, tooltip, menu):
+    button = QToolButton(parent)
+    button.setIcon(QIcon(icon_path))
+    button.setIconSize(QSize(18,18))
+    button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+    button.setText(text)
+    button.setToolTip(tooltip)
+    button.setPopupMode(QToolButton.InstantPopup)
+    button.setMenu(menu)
+    return button
+    
+def build_titlebutton(icon_path, on_click):
+    button = QToolButton()
+    button.setIcon(QIcon(icon_path))   
+    button.clicked.connect(on_click)
+    button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+    button.setFixedSize(QSize(42, 42))
+    button.setStyleSheet("QToolButton { border: none; padding: 0px;}")
     return button
