@@ -277,7 +277,7 @@ def build_toolbar(editor):
 
     numbering_menu.addActions([bullet_num, bulletUpperA, bulletUpperR])
     
-    numbering = build_menubutton(editor, './Assets/icons/svg_bullet_number', "", "Numbering", numbering_menu)
+    numbering = build_menubutton(editor, './Assets/icons/svg_bullet_number', "", "Numbering", "width:35px;", numbering_menu)
    
     editor.homeToolbar.addWidget(numbering)
     
@@ -333,8 +333,7 @@ def build_toolbar(editor):
     
     dateTime_menu.addActions([date, time])
     
-    dateTime = build_menubutton(editor, './Assets/icons/svg_dateTime', "Date & Time", "Date & Time", dateTime_menu)
-    
+    dateTime = build_menubutton(editor, './Assets/icons/svg_dateTime', "Date && Time", "Date & Time", "width:120px;", dateTime_menu)
     
     editor.insertToolbar.addWidget(table) 
     
@@ -416,14 +415,15 @@ def build_button(parent, icon_path, text, tooltip, checkable):
     button.setCheckable(checkable)
     return button
 
-def build_menubutton(parent, icon_path, text, tooltip, menu):
+def build_menubutton(parent, icon_path, text, tooltip, style, menu):
     button = QToolButton(parent)
-    button.setIcon(QIcon(icon_path))
     button.setIconSize(QSize(18,18))
     button.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+    button.setPopupMode(QToolButton.MenuButtonPopup)
+    button.setIcon(QIcon(icon_path))
     button.setText(text)
     button.setToolTip(tooltip)
-    button.setPopupMode(QToolButton.InstantPopup)
+    button.setStyleSheet(style)
     button.setMenu(menu)
     return button
     
