@@ -98,14 +98,17 @@ class SectionView(QWidget):
         sectionModel = self.tabs.tabData(clickedSectionIndex)
 
         menu = QMenu()
-        addSectionAction = menu.addAction(self.tr("Add Section"))
-        addSectionAction.triggered.connect(partial(self.addSection, sectionModel, clickedSectionIndex))
+        renameSectionAction = menu.addAction(self.tr("Rename Section"))
+        renameSectionAction.setIcon(QIcon('./Assets/icons/svg_rename'))
+        renameSectionAction.triggered.connect(partial(self.renameSection, sectionModel, clickedSectionIndex))
 
         deleteSectionAction = menu.addAction(self.tr("Delete Section"))
+        deleteSectionAction.setIcon(QIcon('./Assets/icons/svg_delete'))
         deleteSectionAction.triggered.connect(partial(self.deleteSection, sectionModel, clickedSectionIndex))
 
-        renameSectionAction = menu.addAction(self.tr("Rename Section"))
-        renameSectionAction.triggered.connect(partial(self.renameSection, sectionModel, clickedSectionIndex))
+        addSectionAction = menu.addAction(self.tr("Add Section"))
+        addSectionAction.setIcon(QIcon('./Assets/icons/svg_add_page'))
+        addSectionAction.triggered.connect(partial(self.addSection, sectionModel, clickedSectionIndex))
 
         menu.exec(self.tabs.mapToGlobal(position))
 

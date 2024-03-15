@@ -12,7 +12,7 @@ class PageModel:
 
     @staticmethod
     def newRootPage():
-        rootPage = PageModel("Notebook Pages")
+        rootPage = PageModel("Notebook")
         rootPage.__uuid = 0
         return rootPage
 

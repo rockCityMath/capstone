@@ -3,6 +3,7 @@ from Modules.Load import new, load
 
 from PySide6.QtCore import *
 from PySide6.QtGui import *
+from PySide6.QtSvg import *
 from PySide6.QtWidgets import *
 
 from Models.DraggableContainer import DraggableContainer
@@ -32,14 +33,13 @@ def build_ui(editor):
         with open('./Styles/stylesDark.qss',"r") as fh:
             editor.setStyleSheet(fh.read())
 
-    editor.titlebar = build_titlebar(editor)
     build_menubar(editor)
     build_toolbar(editor)
 
     # Main layout of the app
     gridLayout = QGridLayout()
-    gridLayout.setSpacing(3)
-    gridLayout.setContentsMargins(6, 6, 0, 0)
+    gridLayout.setSpacing(0)
+    gridLayout.setContentsMargins(0, 0, 0, 0)
     gridLayout.setColumnStretch(1, 7)
 
     centralWidget = QWidget()
@@ -52,11 +52,23 @@ def build_ui(editor):
     topSideLayout.setContentsMargins(0, 0, 0, 0)
     topSideLayout.setSpacing(0)
 
+    barsLayout = QVBoxLayout()
+    barsLayoutContainerWidget = QWidget()
+    barsLayoutContainerWidget.setLayout(barsLayout)
+    barsLayout.setContentsMargins(7, 0, 7, 0)
+    barsLayout.setSpacing(0)
+
+    # Add the bars to the layout with individual margins
+    barsLayout.addWidget(editor.menubar)
+    barsLayout.addWidget(editor.homeToolbar)
+    barsLayout.addWidget(editor.insertToolbar)
+    barsLayout.addWidget(editor.drawToolbar)
+
     topSideLayout.addWidget(editor.titlebar, 0)
-    topSideLayout.addWidget(editor.menubar, 1)
-    topSideLayout.addWidget(editor.homeToolbar, 2)
-    topSideLayout.addWidget(editor.insertToolbar, 2)
-    topSideLayout.addWidget(editor.drawToolbar, 2)
+    topSideLayout.addWidget(barsLayoutContainerWidget, 1)
+    # topSideLayout.addWidget(editor.homeToolbar, 2)
+    # topSideLayout.addWidget(editor.insertToolbar, 2)
+    # topSideLayout.addWidget(editor.drawToolbar, 2)
 
     # Sets up left side notebook view
     leftSideLayout = QVBoxLayout()
@@ -87,56 +99,6 @@ def build_ui(editor):
     #Saves window size 
     #editor.restoreGeometry(editor.settings.value("geometry", editor.saveGeometry()))
     #editor.restoreState(editor.settings.value("windowState", editor.saveState()))
-
-class build_titlebar(QWidget):
-    def __init__(self, parent):
-        super().__init__(parent)
-        self.setAutoFillBackground(True)
-        self.setBackgroundRole(QPalette.ColorRole.Highlight)
-        self.setStyleSheet(
-            """
-                background-color: rgb(119, 25, 170);
-            """
-        )
-        self.initial_pos = None
-
-        titlebarLayout = QHBoxLayout(self)
-        titlebarLayout.setContentsMargins(0, 0, 0, 0)
-        titlebarLayout.setSpacing(0)
-        
-        self.logo = build_titlebutton('./Assets/White-OpenNoteLogo', None)
-        titlebarLayout.addWidget(self.logo)
-
-        self.title = QLabel(f"{self.__class__.__name__}", self)
-        self.title.setStyleSheet(
-            """
-               color: white;
-            """
-        )
-        self.title.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        if title := parent.windowTitle():
-            self.title.setText(title)
-        titlebarLayout.addWidget(self.title)   
-        
-        self.tray = build_titlebutton('./Assets/icons/svg_tray', self.window().showMinimized)
-        self.windowed = build_titlebutton('./Assets/icons/svg_windowed', self.window().showMaximized)
-        self.close = build_titlebutton('./Assets/icons/svg_close', self.window().close)
-        self.fullscreen = build_titlebutton('./Assets/icons/svg_fullscreen', self.window().showNormal)
-        self.fullscreen.setVisible(False)
-        
-        titlebarLayout.addWidget(self.tray)
-        titlebarLayout.addWidget(self.fullscreen)
-        titlebarLayout.addWidget(self.windowed)
-        titlebarLayout.addWidget(self.close)
-        
-    def window_state_changed(self, state):
-        if state == Qt.WindowMaximized:
-            self.fullscreen.setVisible(True)
-            self.windowed.setVisible(False)
-        else:
-            self.fullscreen.setVisible(False)
-            self.windowed.setVisible(True)
-
 
 def build_menubar(editor):
     editor.menubar = editor.menuBar()
@@ -186,27 +148,37 @@ def build_toolbar(editor):
     editor.homeToolbar.setObjectName('homeToolbar')
     editor.homeToolbar.setIconSize(QSize(18, 18))
     editor.homeToolbar.setMovable(False)
-    editor.homeToolbar.setStyleSheet('height: 40px; spacing: 10px;')
+    editor.homeToolbar.setFixedHeight(40)
     editor.addToolBar(Qt.ToolBarArea.TopToolBarArea, editor.homeToolbar)
 
-    #separates toolbar with a line break
-    spacer = QWidget()
-    spacer.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+    # For adding space to the left the first button added to a toolbar
+    spacer1 = QWidget()
+    spacer1.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+    spacer1.setFixedWidth(3)
+        
+    spacer2 = QWidget()
+    spacer2.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+    spacer2.setFixedWidth(7)
+        
+    spacer3 = QWidget()
+    spacer3.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+    spacer3.setFixedWidth(3)
 
-    cut = build_action(editor.homeToolbar, './Assets/icons/svg_cut', "cut", "cut", False)
-    cut.triggered.connect(editor.frameView.cutWidgetEvent)
+    cut = build_action(editor.homeToolbar, './Assets/icons/svg_cut', "Cut", "Cut", False)
+    cut.triggered.connect(lambda: editorSignalsInstance.widgetCut.emit(DraggableContainer))
     
-    copy = build_action(editor.homeToolbar, './Assets/icons/svg_copy', "copy", "copy", False)
-    copy.triggered.connect(editor.frameView.copyWidgetEvent)
-
+    copy = build_action(editor.homeToolbar, './Assets/icons/svg_copy', "Copy", "Copy", False)
+    copy.triggered.connect(lambda: editorSignalsInstance.widgetCopied.emit())
 
     font_family = QFontComboBox()
+    font_family.setObjectName("Font")
     font_family.setFixedWidth(150)
     default_font = font_family.currentFont().family()
     print(f"default font is {default_font}")
     font_family.currentFontChanged.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Font, font_family.currentFont().family()))
 
     font_size = QComboBox()
+    font_size.setObjectName("Font Size")
     font_size.setFixedWidth(50)
     font_size.addItems([str(fs) for fs in FONT_SIZES])
     # default text size is 11
@@ -243,13 +215,14 @@ def build_toolbar(editor):
     strikethrough = build_action(editor.homeToolbar, './Assets/icons/svg_strikethrough.svg', "Strikethrough", "Strikethrough", True)
     strikethrough.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Strikethrough, None))
     
+    delete = build_action(editor.homeToolbar, './Assets/icons/svg_delete', "Delete", "Delete", False)
+    delete.triggered.connect(lambda: editorSignalsInstance.widgetRemoved.emit(DraggableContainer))
+    
     # Bullets with placeholder for more bullet options
     bullet = build_action(editor.homeToolbar, './Assets/icons/svg_bullets', "Bullets", "Bullets", False)
     bullet.triggered.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Bullet, None))
 
-    paperColor= build_action(editor.homeToolbar, './Assets/icons/svg_paper', "Paper Color", "Paper Color", False)
-    paperColor.triggered.connect(lambda: editor.frameView.pageColor(QColorDialog.getColor()))
-    
+    editor.homeToolbar.addWidget(spacer1)
     editor.homeToolbar.addActions([cut, copy])
     
     editor.homeToolbar.addSeparator()
@@ -259,8 +232,7 @@ def build_toolbar(editor):
     
     editor.homeToolbar.addSeparator()
     
-    editor.homeToolbar.addActions([bold, italic, underline, strikethrough, fontColor, textHighlightColor, bgColor, paperColor, bullet])
-
+    editor.homeToolbar.addActions([bold, italic, underline, strikethrough, fontColor, textHighlightColor, bgColor, delete, bullet])
 
     # numbering menu start
     numbering_menu = QMenu(editor)
@@ -298,28 +270,27 @@ def build_toolbar(editor):
 
     editor.homeToolbar.addSeparator()
     
-    
     # insertToolbar code 
     editor.insertToolbar = QToolBar()
     editor.insertToolbar.setObjectName('insertToolbar')
     editor.insertToolbar.setIconSize(QSize(18,18))
-    editor.insertToolbar.setStyleSheet('height: 40px; spacing: 10px;')
+    editor.insertToolbar.setFixedHeight(40)
     editor.insertToolbar.setMovable(False)
     editor.insertToolbar.setVisible(False)
     editor.addToolBar(Qt.ToolBarArea.TopToolBarArea, editor.insertToolbar)
-    
-    table = build_button(editor.insertToolbar, './Assets/icons/svg_table', " Table ", "Add a Table", False)
+
+    table = build_button(editor.insertToolbar, './Assets/icons/svg_table', "Table", "Add a Table", False)
     table.clicked.connect(editor.frameView.toolbar_table)
     
     insertSpace = build_button(editor.insertToolbar, './Assets/icons/svg_insert_space', "Insert Space", "Insert Space", False)
     
-    screensnip = build_button(editor.insertToolbar, './Assets/icons/svg_screensnip', " Screensnip ", "Screensnip", False)
+    screensnip = build_button(editor.insertToolbar, './Assets/icons/svg_screensnip', "Screensnip", "Screensnip", False)
     screensnip.clicked.connect(editor.frameView.toolbar_snipScreen)
     
-    pictures = build_button(editor.insertToolbar, './Assets/icons/svg_pictures', " Pictures ", "Pictures", False)
+    pictures = build_button(editor.insertToolbar, './Assets/icons/svg_pictures', "Pictures" , "Pictures", False)
     pictures.clicked.connect(editor.frameView.toolbar_pictures)
 
-    hyperlink = build_button(editor.insertToolbar, './Assets/icons/svg_hyperlink', " Hyperlink ", "Hyperlink", False)
+    hyperlink = build_button(editor.insertToolbar, './Assets/icons/svg_hyperlink', "Hyperlink", "Hyperlink", False)
     hyperlink.clicked.connect(editor.frameView.toolbar_hyperlink)
 
     # date and time menu start
@@ -335,6 +306,8 @@ def build_toolbar(editor):
     
     dateTime = build_menubutton(editor, './Assets/icons/svg_dateTime', "Date && Time", "Date & Time", "width:120px;", dateTime_menu)
     
+    editor.insertToolbar.addWidget(spacer2)
+
     editor.insertToolbar.addWidget(table) 
     
     editor.insertToolbar.addSeparator()
@@ -349,6 +322,7 @@ def build_toolbar(editor):
     editor.insertToolbar.addSeparator()
     
     editor.insertToolbar.addWidget(hyperlink)
+    
     editor.insertToolbar.addSeparator()
 
     editor.insertToolbar.addWidget(dateTime)
@@ -357,20 +331,26 @@ def build_toolbar(editor):
     editor.drawToolbar = QToolBar()
     editor.drawToolbar.setObjectName('drawToolbar')
     editor.drawToolbar.setIconSize(QSize(18, 18))
-    editor.drawToolbar.setStyleSheet('height: 40px; spacing: 10px;')
+    editor.drawToolbar.setFixedHeight(40)
     editor.drawToolbar.setMovable(False)
     editor.drawToolbar.setVisible(False)
     editor.addToolBar(Qt.ToolBarArea.TopToolBarArea, editor.drawToolbar)
     
-    undo = build_action(editor.drawToolbar, './Assets/icons/svg_undo', "undo", "undo", False)
+    undo = build_action(editor.drawToolbar, './Assets/icons/svg_undo', "Undo", "Undo", False)
     undo.triggered.connect(editor.frameView.triggerUndo)
 
-    redo = build_action(editor.drawToolbar, './Assets/icons/svg_redo', "redo", "redo", False)
+    redo = build_action(editor.drawToolbar, './Assets/icons/svg_redo', "Redo", "Redo", False)
     # redo.triggered.connect(editor.frameView.triggerRedo)
-    
+       
+    paperColor= build_action(editor.drawToolbar, './Assets/icons/svg_paper', "Paper Color", "Paper Color", False)
+    paperColor.triggered.connect(lambda: editor.frameView.pageColor(QColorDialog.getColor()))
+     
+    editor.drawToolbar.addWidget(spacer3)
     editor.drawToolbar.addActions([undo, redo])
     
     editor.drawToolbar.addSeparator()
+
+    editor.drawToolbar.addAction(paperColor)
 
 def check_appearance():
     """Checks DARK/LIGHT mode of macos."""
@@ -403,6 +383,7 @@ def openGetColorDialog(purpose):
 
 def build_action(parent, icon_path, action_name, tooltip, checkable):
     action = QAction(QIcon(icon_path), action_name, parent)
+    action.setObjectName(action_name)
     action.setStatusTip(tooltip)
     action.setCheckable(checkable)
     return action
@@ -410,6 +391,7 @@ def build_action(parent, icon_path, action_name, tooltip, checkable):
 def build_button(parent, icon_path, text, tooltip, checkable):
     button = QPushButton(parent)
     button.setIcon(QIcon(icon_path))
+    button.setObjectName(text)
     button.setText(text)
     button.setToolTip(tooltip)
     button.setCheckable(checkable)
@@ -423,15 +405,7 @@ def build_menubutton(parent, icon_path, text, tooltip, style, menu):
     button.setIcon(QIcon(icon_path))
     button.setText(text)
     button.setToolTip(tooltip)
+    button.setObjectName(tooltip)
     button.setStyleSheet(style)
     button.setMenu(menu)
-    return button
-    
-def build_titlebutton(icon_path, on_click):
-    button = QToolButton()
-    button.setIcon(QIcon(icon_path))   
-    button.clicked.connect(on_click)
-    button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-    button.setFixedSize(QSize(42, 42))
-    button.setStyleSheet("QToolButton { border: none; padding: 0px;}")
     return button

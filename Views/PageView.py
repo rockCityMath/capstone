@@ -11,6 +11,9 @@ from Modules.EditorSignals import editorSignalsInstance
 
 # Page view and controller
 class PageView(QWidget):
+    # Class variable to keep track of page count
+    pageCount = 1
+
     def __init__(self, pageModels: List[PageModel]):
         super(PageView, self).__init__()
 
@@ -57,7 +60,7 @@ class PageView(QWidget):
             root.appendRow([rootPage])
 
             # Create a first page
-            newPageModel = PageModel('New Page', 0)
+            newPageModel = PageModel(f'New Page {self.pageCount}', 0)
             newPage = QStandardItem(newPageModel.title)
             newPage.setData(newPageModel)
             newPage.setEditable(False)
@@ -123,27 +126,31 @@ class PageView(QWidget):
             level = 0
 
         menu = QMenu()
-        addChildAction = menu.addAction(self.tr("Add Page"))
-        addChildAction.triggered.connect(partial(self.addPage, level, clickedIndex))
-
         if not page.data().isRoot():   # Dont delete the root page
+            renamePageAction = menu.addAction(self.tr("Rename Page"))
+            renamePageAction.setIcon(QIcon('./Assets/icons/svg_rename'))
+            renamePageAction.triggered.connect(partial(self.renamePage, page))
+
             deletePageAction = menu.addAction(self.tr("Delete Page"))
+            deletePageAction.setIcon(QIcon('./Assets/icons/svg_delete'))
             deletePageAction.triggered.connect(partial(self.deletePage, page))
 
-            renamePageAction = menu.addAction(self.tr("Rename Page"))
-            renamePageAction.triggered.connect(partial(self.renamePage, page))
+            addChildAction = menu.addAction(self.tr("New Page"))
+            addChildAction.setIcon(QIcon('./Assets/icons/svg_add_page'))
+            addChildAction.triggered.connect(partial(self.addPage, level, clickedIndex))
+
 
             #Current Issue: settings do not save because autosave only saves editor state
             '''
             mergePageAction = menu.addAction(self.tr("Merge Pages"))
             mergePageAction.triggered.connect(partial(self.mergePages, page))
             '''
-
-            changeTextColorAction = menu.addAction(self.tr("Change Text Color"))
-            changeTextColorAction.triggered.connect(partial(self.changeTextColor, page))
+            # Why even have this???
+            # changeTextColorAction = menu.addAction(self.tr("Change Text Color"))
+            # changeTextColorAction.triggered.connect(partial(self.changeTextColor, page))
             
-            changeBackgroundColorAction = menu.addAction(self.tr("Change Background Color"))
-            changeBackgroundColorAction.triggered.connect(partial(self.changeBackgroundColor, page))
+            PageColorAction = menu.addAction(self.tr("Page Color"))
+            PageColorAction.triggered.connect(partial(self.PageColor, page))
         menu.exec_(self.sender().viewport().mapToGlobal(position))
 
     # Dont let the right click reach the viewport, context menu will still open but this will stop the page from being selected
@@ -165,7 +172,8 @@ class PageView(QWidget):
         parentPageUUID = parentPage.data().getUUID()
 
         # Create a new page model, set that as the data for the new page
-        newPageModel = PageModel('New Page', parentPageUUID)
+        self.pageCount += 1
+        newPageModel = PageModel(f'New Page {self.pageCount}', parentPageUUID)
         newPage = QStandardItem(newPageModel.title)
         newPage.setData(newPageModel)
         newPage.setEditable(False)
@@ -227,15 +235,13 @@ class PageView(QWidget):
 
         editorSignalsInstance.pageChanged.emit(newPageModel) # Tell the sectionView that the page has changed
 
-    '''
+
     #   Not sure if working as intended 
-    def mergePages(self):
-        # Prompt the user to select two pages
+    '''
+    def mergePages(self, page: QStandardItem):
         selectedIndexes = self.tree.selectedIndexes()
 
-        # Check if exactly two pages are selected
         if len(selectedIndexes) == 2:
-            # Retrieve the QStandardItem objects corresponding to the selected pages
             page1Item = self.model.itemFromIndex(selectedIndexes[0])
             page2Item = self.model.itemFromIndex(selectedIndexes[1])
 
@@ -243,9 +249,23 @@ class PageView(QWidget):
             page1Model = page1Item.data()
             page2Model = page2Item.data()
 
+            # Prompt the user for the name of the page to merge into the second page
+            name, ok = QInputDialog.getText(self, 'Merge Pages', f'Enter the name of the page to merge into "{page2Model.title}":')
+            if not ok:
+                return
+
+            if name != page1Model.title:
+                QMessageBox.warning(self, 'Invalid Page Name', 'The entered page name does not match the selected page.', QMessageBox.Ok)
+                return
+
+            # Confirm the merge operation
+            reply = QMessageBox.question(self, 'Confirm Merge', 'This action cannot be undone. Are you sure you want to merge the pages?', QMessageBox.Yes | QMessageBox.No, QMessageBox.No)
+            if reply == QMessageBox.No:
+                return
+
             # Merge the sections of the two pages into one page
             mergedSections = page1Model.sections + page2Model.sections
-            newPageModel = PageModel('Merged Page', 0, mergedSections)  # Assuming 0 as the parent UUID for the root
+            newPageModel = PageModel(page2Model.title, page2Model.getParentUUID(), mergedSections)
 
             # Create a new QStandardItem for the merged page
             newPageItem = QStandardItem(newPageModel.title)
@@ -269,16 +289,14 @@ class PageView(QWidget):
             # Expand the tree to show the changes
             self.tree.expandAll()
         else:
-            # If not exactly two pages are selected, show a warning or message
             QMessageBox.warning(self, 'Invalid Selection', 'Please select exactly two pages to merge.', QMessageBox.Ok)
     '''
-    
     def changeTextColor(self, page: QStandardItem):
         color = QColorDialog.getColor()
         if color.isValid():
             page.setForeground(color)
 
-    def changeBackgroundColor(self, page: QStandardItem):
+    def PageColor(self, page: QStandardItem):
         color = QColorDialog.getColor()
         if color.isValid():
             page.setBackground(color)
