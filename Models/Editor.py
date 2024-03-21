@@ -73,6 +73,7 @@ class Editor(QMainWindow):
 
     def mouseMoveEvent(self, event):
         if Qt.LeftButton and self.moveFlag:
+            self.setWindowState(Qt.WindowNoState)
             self.move(event.globalPos() - self.movePosition)
             event.accept()
 
