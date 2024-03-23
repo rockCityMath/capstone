@@ -289,6 +289,12 @@ class EditorFrameView(QWidget):
         return center_x, center_y
 
     # Used for calling functions in toolbar
+    def toolbar_paste(self):
+        print("toolbar_paste pressed")
+        center_x, center_y = self.center_of_screen()
+        clickPos = QPoint(center_x, center_y)
+        self.pasteWidget(clickPos)
+
     def toolbar_table(self):
         print("toolbar_table pressed")
         center_x, center_y = self.center_of_screen()

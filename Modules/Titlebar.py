@@ -98,6 +98,7 @@ class Build_titlebar(QWidget):
 
         # Dictionary mapping search keywords to corresponding actions
         actions = {
+            "paste": lambda: None, # editor.frameView.toolbar_paste
             "cut": lambda: None,
             "copy": lambda: None,
             "paste": lambda: None,

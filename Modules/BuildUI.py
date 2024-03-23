@@ -164,6 +164,9 @@ def build_toolbar(editor):
     spacer3.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
     spacer3.setFixedWidth(3)
 
+    paste = build_action(editor.homeToolbar, './Assets/icons/svg_paste', "Paste", "Paste", False)
+    paste.triggered.connect(editor.frameView.toolbar_paste)
+
     cut = build_action(editor.homeToolbar, './Assets/icons/svg_cut', "Cut", "Cut", False)
     cut.triggered.connect(lambda: editorSignalsInstance.widgetCut.emit(DraggableContainer))
     
@@ -223,7 +226,7 @@ def build_toolbar(editor):
     bullet.triggered.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Bullet, None))
 
     editor.homeToolbar.addWidget(spacer1)
-    editor.homeToolbar.addActions([cut, copy])
+    editor.homeToolbar.addActions([paste, cut, copy])
     
     editor.homeToolbar.addSeparator()
     
@@ -269,6 +272,18 @@ def build_toolbar(editor):
     editor.homeToolbar.addActions(align_group.actions())
 
     editor.homeToolbar.addSeparator()
+
+    
+    # Classic Home Toolbar
+    editor.classicToolbar = QToolBar()
+    editor.classicToolbar.setObjectName('classicHomeToolbar')
+    editor.classicToolbar.setIconSize(QSize(18,18))
+    editor.classicToolbar.setFixedHeight(40)
+    editor.classicToolbar.setMovable(False)
+    editor.classicToolbar.setVisible(False)
+    editor.addToolBar(Qt.ToolBarArea.TopToolBarArea, editor.classicToolbar)
+
+
     
     # insertToolbar code 
     editor.insertToolbar = QToolBar()
