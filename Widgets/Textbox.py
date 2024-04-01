@@ -8,7 +8,7 @@ import subprocess
 FONT_SIZES = [7, 8, 9, 10, 11, 12, 13, 14, 18, 24, 36, 48, 64, 72, 96, 144, 288]
 
 
-class TextboxWidget(QTextBrowser):
+class TextboxWidget(QTextEdit):
     def __init__(self, x, y, w=15, h=30, t=""):
         super().__init__()
 
@@ -22,10 +22,13 @@ class TextboxWidget(QTextBrowser):
         self.setGeometry(x, y, w, h)  # This sets geometry of DraggableObject
         self.setText(t)
 
+        self.setStyleSheet("selection-background-color: #FFFFFF;")
+
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.textChanged.connect(self.textChangedEvent)
         editorSignalsInstance.widgetAttributeChanged.connect(self.widgetAttributeChanged)
+
 
 
         if check_appearance() == True:
@@ -33,7 +36,7 @@ class TextboxWidget(QTextBrowser):
             #self.changeBackgroundColorEvent(31, 31, 30)
             self.setTextColor("white")
             self.changeAllTextColors("white")
-
+            self.set
         else:
             self.setStyleSheet("background-color: rgba(0, 0, 0, 0);")
             #self.changeBackgroundColorEvent(0,0,0)
@@ -92,6 +95,45 @@ class TextboxWidget(QTextBrowser):
         if len(self.toPlainText()) < 1:
             return True
         return False
+    
+    # Handles events from any toolbar button
+    def widgetAttributeChanged(self, changedWidgetAttribute, value):
+    # dictionary of toolbar functions
+        attribute_functions = {
+            # note: for functions with no value passed, lambda _ will allow it to pass with no value
+
+            # font functions
+            ChangedWidgetAttribute.FontSize: lambda val: self.changeFontSizeEvent(val),
+            ChangedWidgetAttribute.FontBold: lambda _: self.changeFontBoldEvent(),
+            ChangedWidgetAttribute.FontItalic: lambda _: self.changeFontItalicEvent(),
+            ChangedWidgetAttribute.FontUnderline: lambda _: self.changeFontUnderlineEvent(),
+            ChangedWidgetAttribute.Strikethrough: lambda _: self.setStrikeOut(),
+            ChangedWidgetAttribute.Font: lambda val: self.changeFontEvent(val),
+            ChangedWidgetAttribute.FontColor: lambda val: self.changeFontColorEvent(val),
+            ChangedWidgetAttribute.TextHighlightColor: lambda val: self.changeTextHighlightColorEvent(val),
+
+            # background color functions
+            ChangedWidgetAttribute.BackgroundColor: lambda val: self.changeBackgroundColorEvent(val),
+            ChangedWidgetAttribute.PaperColor: lambda val: self.paperColor(val), # not implemented yet
+
+            # Bullet list functions
+            ChangedWidgetAttribute.Bullet: lambda _: self.bullet_list("bulletReg"),
+            ChangedWidgetAttribute.Bullet_Num: lambda _: self.bullet_list("bulletNum"),
+            ChangedWidgetAttribute.Bullet_Num: lambda _: self.bullet_list("bulletUpperA"),
+            ChangedWidgetAttribute.Bullet_Num: lambda _: self.bullet_list("bulletUpperR"),
+
+            # Alignment functions
+            ChangedWidgetAttribute.Bullet_Num: lambda _: self.changeAlignmentEvent("alignLeft"),
+            ChangedWidgetAttribute.Bullet_Num: lambda _: self.changeAlignmentEvent("alignCenter"),
+            ChangedWidgetAttribute.Bullet_Num: lambda _: self.changeAlignmentEvent("alignRight")
+        }
+
+        if self.hasFocus and changedWidgetAttribute in attribute_functions:
+            # Calls the function in the dictionary
+            attribute_functions[changedWidgetAttribute](value)
+        else:
+            # Handle invalid attribute or other cases
+            pass
 
     def customMenuItems(self):
         def build_action(parent, icon_path, action_name, set_status_tip, set_checkable):
@@ -126,30 +168,31 @@ class TextboxWidget(QTextBrowser):
         )
         
         align_left = build_action(toolbarBottom, "./Assets/icons/svg_align_left", "Align Left", "Align Left", False)
-        align_left.triggered.connect(lambda x: self.setAlignment(Qt.AlignLeft))
+        # align_left.triggered.connect(lambda x: self.setAlignment(Qt.AlignLeft))
+        align_left.triggered.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.AlignLeft, None))
+
 
         align_center = build_action(toolbarBottom, "./Assets/icons/svg_align_center", "Align Center", "Align Center", False)
-        align_center.triggered.connect(lambda x: self.setAlignment(Qt.AlignCenter))
+        # align_center.triggered.connect(lambda x: self.setAlignment(Qt.AlignCenter))
+        align_center.triggered.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.AlignCenter, None))
+
 
         align_right = build_action(toolbarBottom, "./Assets/icons/svg_align_right", "Align Right", "Align Right", False)
         align_right.triggered.connect(lambda x: self.setAlignment(Qt.AlignRight))
+        align_right.triggered.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.AlignRight, None))
+
 
         bold = build_action(
             toolbarBottom, "./Assets/icons/svg_font_bold", "Bold", "Bold", True
         )
-        bold.toggled.connect(lambda x: self.setFontWeightCustom(700 if x else 500))
+        bold.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontBold, None))
 
         italic = build_action(
             toolbarBottom, "./Assets/icons/svg_font_italic", "Italic", "Italic", True
         )
-        italic.toggled.connect(lambda x: self.setFontItalicCustom(True if x else False))
+        italic.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontItalic, None))
 
-        underline = build_action(
-            toolbarBottom,
-            "./Assets/icons/svg_font_underline",
-            "Underline",
-            "Underline",
-            True,
+        underline = build_action(toolbarBottom,"./Assets/icons/svg_font_underline","Underline","Underline",True,
         )
         underline.toggled.connect(
             lambda x: self.setFontUnderlineCustom(True if x else False)
@@ -615,39 +658,8 @@ class TextboxWidget(QTextBrowser):
         self.setTextCursor(cursor)
         #self.setFocus()
 
-    # Handles events from any toolbar button
-    def widgetAttributeChanged(self, changedWidgetAttribute, value):
-        #if (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.LoseFocus):
-            #self.emptyWidget()
-        # test function for refactoring code
-        if (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.Refactor):
-            print("REFACTOR TEST WORKED")
-            editorSignalsInstance.checkMade.emit(CheckSignal.BoldCheck, None)
-            # self.refactorTest()
-        # Font Size function
-        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.FontSize):
-            self.changeFontSizeEvent(value)
-        # Bold function
-        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.FontBold):
-            self.changeFontBoldEvent()
-        # Italics function
-        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.FontItalic):
-            self.changeFontItalicEvent()
-        # Underline function
-        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.FontUnderline):
-            self.changeFontUnderlineEvent()
-        # 
-        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.FontUnderline):
-            self.changeFontUnderlineEvent()
-        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.Strikethrough):
-            self.setStrikeOut()
-        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.Font):
-            self.changeFontEvent(value)
-        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.FontColor):
-            self.changeFontColorEvent(value)
-        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.TextHighlightColor):
-            self.changeTextHighlightColorEvent(value)
-        # elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.FontUnderline):
+
+
     def refactorTest(self):
         cursor = self.textCursor()
         current_format = cursor.charFormat()

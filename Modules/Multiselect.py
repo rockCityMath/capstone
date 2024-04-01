@@ -156,7 +156,7 @@ class Multiselector(QObject):
         # highlight all text for textwidgets
         for o in self.selectedObjects:
             # Checks if child is textwidget
-            if (isinstance(o.childWidget, QTextBrowser)):
+            if (isinstance(o.childWidget, QTextEdit)):
                 print("TEXT WIDGET FOUND. HIGHLIGHTING")
                 # Call function in textwidget to highlight all text in their textbox
                 o.childWidget.selectAllText()

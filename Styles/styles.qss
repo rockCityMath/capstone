@@ -125,3 +125,8 @@ QPushButton#addPage {
 QPushButton#addPage::hover {
     background-color: red;
 }
+
+QTextEdit {
+    selection-background-color: #F0F0F0;
+    selection-color: #000000
+}
