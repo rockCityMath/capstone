@@ -1,7 +1,7 @@
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
-from Modules.EditorSignals import editorSignalsInstance
+from Modules.EditorSignals import editorSignalsInstance, ChangedWidgetAttribute, CheckSignal
 
 import subprocess
 
@@ -25,6 +25,8 @@ class TextboxWidget(QTextBrowser):
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.textChanged.connect(self.textChangedEvent)
+        editorSignalsInstance.widgetAttributeChanged.connect(self.widgetAttributeChanged)
+
 
         if check_appearance() == True:
             self.setStyleSheet("background-color: rgba(31,31,30,255);")
@@ -46,6 +48,11 @@ class TextboxWidget(QTextBrowser):
         if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Tab:
             self.handleTabKey()
             return True  # To prevent the default Tab key behavior
+        '''if event.type() == QEvent.FocusOut:
+            if self.checkEmpty():
+                parent = self.parent()
+                if parent is not None:
+                    parent.deleteLater()'''
 
         return super(TextboxWidget, self).eventFilter(obj, event)
 
@@ -607,3 +614,69 @@ class TextboxWidget(QTextBrowser):
         #cursor.movePosition(QTextCursor.End)
         self.setTextCursor(cursor)
         #self.setFocus()
+
+    # Handles events from any toolbar button
+    def widgetAttributeChanged(self, changedWidgetAttribute, value):
+        #if (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.LoseFocus):
+            #self.emptyWidget()
+        # test function for refactoring code
+        if (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.Refactor):
+            print("REFACTOR TEST WORKED")
+            editorSignalsInstance.checkMade.emit(CheckSignal.BoldCheck, None)
+            # self.refactorTest()
+        # Font Size function
+        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.FontSize):
+            self.changeFontSizeEvent(value)
+        # Bold function
+        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.FontBold):
+            self.changeFontBoldEvent()
+        # Italics function
+        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.FontItalic):
+            self.changeFontItalicEvent()
+        # Underline function
+        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.FontUnderline):
+            self.changeFontUnderlineEvent()
+        # 
+        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.FontUnderline):
+            self.changeFontUnderlineEvent()
+        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.Strikethrough):
+            self.setStrikeOut()
+        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.Font):
+            self.changeFontEvent(value)
+        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.FontColor):
+            self.changeFontColorEvent(value)
+        elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.TextHighlightColor):
+            self.changeTextHighlightColorEvent(value)
+        # elif (self.hasFocus and changedWidgetAttribute == ChangedWidgetAttribute.FontUnderline):
+    def refactorTest(self):
+        cursor = self.textCursor()
+        current_format = cursor.charFormat()
+
+        # Checks if currently selected text is bold
+        is_bold = current_format.fontWeight() == 700
+
+        # toggles the italics
+        if is_bold:
+            current_format.setFontWeight(500)
+        else:
+            current_format.setFontWeight(700)
+        # Apply modified format to selected text
+        cursor.setCharFormat(current_format)
+        cursor.mergeCharFormat(format)
+        # Emit signal if no text is bold to toggle bold off
+        if not is_bold:
+            editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontBold, None)
+        # Update text cursor with modified format
+        self.setTextCursor(cursor)
+
+    def selectAllText(self):
+        print("Select All Text function from textwidget called")
+        cursor = self.textCursor()
+        cursor.setPosition(0)
+        cursor.movePosition(QTextCursor.End, QTextCursor.KeepAnchor)
+        self.setTextCursor(cursor)
+
+    def removeWidget(self):
+        if(self.checkEmpty()):
+            print("removing widget")
+            editorSignalsInstance.widgetRemoved.emit(self)

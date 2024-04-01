@@ -98,6 +98,10 @@ class DraggableContainer(QWidget):
         if not e.buttons() and Qt.LeftButton:
             print("Draggable Container GOT MOUSE PRESS")
             self.setCursorShape(e.pos())
+
+            if (self.hasFocus == False and isinstance(self.childWidget, QTextBrowser)):
+                print("Deselecting text")
+                self.childWidget.deselectText()
             return True
         if e.button() == Qt.RightButton:
             self.popupShow(e.pos())
@@ -402,46 +406,8 @@ class DraggableContainer(QWidget):
         #if self.hasFocus() or child_widget.hasFocus():
             #only the focused container will print this line
         print(f"changedWidgetAttribute is {changedWidgetAttribute} and value is {value}")
-            
-        if hasattr(child_widget, "changeFontSizeEvent") and (changedWidgetAttribute == ChangedWidgetAttribute.FontSize):
-            print("Change Font Size Event Called")
-            child_widget.changeFontSizeEvent(value)
-            
-        elif hasattr(child_widget, "changeFontBoldEvent") and (changedWidgetAttribute == ChangedWidgetAttribute.FontBold):
-            print("Change Font Bold Event Called")
-            child_widget.changeFontBoldEvent()
-
-        elif hasattr(child_widget, "changeFontItalicEvent") and (changedWidgetAttribute == ChangedWidgetAttribute.FontItalic):
-            print("Change Font Italic Event Called")
-            child_widget.changeFontItalicEvent()
-
-        elif hasattr(child_widget, "changeFontUnderlineEvent") and (changedWidgetAttribute == ChangedWidgetAttribute.FontUnderline):
-            print("Change Font Underline Event Called")
-            child_widget.changeFontUnderlineEvent()
-
-        elif hasattr(child_widget, "setStrikeOut") and (changedWidgetAttribute == ChangedWidgetAttribute.Strikethrough):
-            print("Change strikethroughEvent called")
-            child_widget.setStrikeOut()
-
-        elif hasattr(child_widget, "changeFontEvent") and (changedWidgetAttribute == ChangedWidgetAttribute.Font):
-            print("Change Font Family Event Called")
-            child_widget.changeFontEvent(value)
-
-        elif hasattr(child_widget, "changeFontColorEvent") and (changedWidgetAttribute == ChangedWidgetAttribute.FontColor):
-            print("Change Font Color Event Called")
-            child_widget.changeFontColorEvent(value)
-
-        elif hasattr(child_widget, "changeTextHighlightColorEvent") and (changedWidgetAttribute == ChangedWidgetAttribute.TextHighlightColor):
-            print("Change Textbox Color Event Called")
-            child_widget.changeTextHighlightColorEvent(value)
-
-        elif hasattr(child_widget, "deselectText") and (changedWidgetAttribute == ChangedWidgetAttribute.LoseFocus):
-            print("Clear Selection Slot Called")
-            child_widget.deselectText()
-            if hasattr(self.childWidget, "checkEmpty") and isinstance(child_widget, QTextBrowser):
-                if self.childWidget.checkEmpty():
-                    print("Removing empty container")
-                    editorSignalsInstance.widgetRemoved.emit(self)
+        if (self.hasFocus() and changedWidgetAttribute == ChangedWidgetAttribute.LoseFocus):
+            child_widget.removeWidget()
         if self.hasFocus() or child_widget.hasFocus():
             if hasattr(child_widget, "changeBulletEvent") and (changedWidgetAttribute == ChangedWidgetAttribute.Bullet):
                 print("Change Bullet Event Called")

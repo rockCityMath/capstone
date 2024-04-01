@@ -10,6 +10,9 @@ class LinkDialog(QDialog):
         self.setWindowTitle("Insert Link")
         layout = QVBoxLayout()
 
+        # to stay on top of application
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
+        
         self.link_label = QLabel("Link Address:")
         self.link_textbox = QLineEdit()
         self.display_label = QLabel("Display Text:")

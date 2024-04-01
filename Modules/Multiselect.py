@@ -27,11 +27,20 @@ class Multiselector(QObject):
         self.dragInitEventPos = None               # Position of the event that started the dragging
         self.dragOffset = None                     # Offset of object that is used to drag the others from the first object in the editors list
 
+
         # for handling deselect
         self.installEventFilter()
-
+        # Connect signal for widget removal
+        editorSignalsInstance.widgetRemoved.connect(self.removeWidgetFromList)
+        
         editorSignalsInstance.widgetCut.connect(self.cutWidgetEvent)
 
+    # Slot to remove widget from object list
+    @Slot(QWidget)
+    def removeWidgetFromList(self, widget):
+        if widget in self.selectedObjects:
+            self.selectedObjects.remove(widget)
+            
     # install event filter to editorframe
     def installEventFilter(self):
         self.editorFrame.installEventFilter(self)
@@ -70,7 +79,7 @@ class Multiselector(QObject):
         if event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton:
             if multiselector.mode == MultiselectMode.HAS_SELECTED_OBJECTS:
                 multiselector.deselectIfClickOutsideObjects(event)
-                print("DESELECT")
+                print("DESELECT from multiselect")
 
         return False
 
@@ -144,6 +153,13 @@ class Multiselector(QObject):
 
         print("SELECTION COUNT: ", len(self.selectedObjects))
 
+        # highlight all text for textwidgets
+        for o in self.selectedObjects:
+            # Checks if child is textwidget
+            if (isinstance(o.childWidget, QTextBrowser)):
+                print("TEXT WIDGET FOUND. HIGHLIGHTING")
+                # Call function in textwidget to highlight all text in their textbox
+                o.childWidget.selectAllText()
         # Hide selection area
         self.drawingWidget.hide()
 
@@ -158,7 +174,7 @@ class Multiselector(QObject):
 
         # Get the position that each object would move to
         objectPositions = []
-        for o in reversed(self.selectedObjects): # fuck it, reversed
+        for o in reversed(self.selectedObjects): # fuck it, reversed 
 
             # You have to know this, focus
             # Position of the first (in the reversed array) object's top left corner + the offset of the click inside the selected object - the position of the object to move
