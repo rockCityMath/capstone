@@ -18,11 +18,11 @@ class TextboxWidget(QTextEdit):
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, shell=True)
             return bool(p.communicate()[0])   
-
+        
         self.setGeometry(x, y, w, h)  # This sets geometry of DraggableObject
         self.setText(t)
 
-        self.setStyleSheet("selection-background-color: #FFFFFF;")
+        # self.setStyleSheet("background-color: rgba(0, 0, 0, 0); selection-background-color: #FFFFFF;")
 
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -65,9 +65,25 @@ class TextboxWidget(QTextEdit):
         cursor = self.cursorForPosition(event.pos())
         self.setTextCursor(cursor)
 
+    # Initial size is w=15, h=30. once changes to textbox has been detected, change the size
     def textChangedEvent(self):
+        width = 150
+        height = 50
         if len(self.toPlainText()) < 2:
-            self.resize(100, 100)
+            self.resize(width, height)
+        else:
+            # handle cases where text reaches past the textbox
+            document = self.document()
+            documentSize = document.size().toSize()
+            documentHeight = documentSize.height()
+            # the document height is the text height. This is to expand the widget size to match document height
+            if(newHeight < documentHeight):
+                newHeight = documentHeight
+                self.resize(width, height)
+
+
+
+    
 
     @staticmethod
     def new(clickPos: QPoint):
@@ -187,30 +203,17 @@ class TextboxWidget(QTextEdit):
         )
         bold.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontBold, None))
 
-        italic = build_action(
-            toolbarBottom, "./Assets/icons/svg_font_italic", "Italic", "Italic", True
-        )
+        italic = build_action(toolbarBottom, "./Assets/icons/svg_font_italic", "Italic", "Italic", True)
         italic.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontItalic, None))
 
-        underline = build_action(toolbarBottom,"./Assets/icons/svg_font_underline","Underline","Underline",True,
-        )
-        underline.toggled.connect(
-            lambda x: self.setFontUnderlineCustom(True if x else False)
-        )
+        underline = build_action(toolbarBottom,"./Assets/icons/svg_font_underline","Underline","Underline",True,)
+        underline.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontUnderline, None))
 
-        strikethrough = build_action(
-            toolbarBottom,"./Assets/icons/svg_strikethrough", "Strikethrough", "Strikethrough", True
-            )
-        strikethrough.toggled.connect(lambda: self.setStrikeOut())
+        strikethrough = build_action(toolbarBottom,"./Assets/icons/svg_strikethrough", "Strikethrough", "Strikethrough", True)
+        strikethrough.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Strikethrough, None))
 
 
-        fontColor = build_action(
-            toolbarBottom,
-            "./Assets/icons/svg_font_color",
-            "Font Color",
-            "Font Color",
-            False,
-        )
+        fontColor = build_action(toolbarBottom,"./Assets/icons/svg_font_color","Font Color","Font Color",False)
         fontColor.triggered.connect(
             lambda: self.setTextColorCustom(QColorDialog.getColor())
         )

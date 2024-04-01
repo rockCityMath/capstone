@@ -122,6 +122,7 @@ class DraggableContainer(QWidget):
             pass'''
         # need to add code for setting cursor to the end of the textbox
 
+
     # On double click, focus on child and make mouse events pass through this container to child
     def mouseDoubleClickEvent(self, e: QMouseEvent):
         print("MOUSEDOUBLECLICKEVENT FROM DRAGGABLE CONTAINER")
@@ -137,12 +138,19 @@ class DraggableContainer(QWidget):
         return True # Dont let the release go to the editor frame
 
     def leaveEvent(self, e: QMouseEvent):
-        self.childWidget.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-        self.setStyleSheet("border: none;")
-        
+        if(self.childWidget.hasFocus() == False):
+            self.childWidget.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+            self.setStyleSheet("border: none;")
         # If mouse leaves draggable container, set focus to the editor
         #if self.childWidget.hasFocus():
         #    self.setFocus()'''
+
+    # this is to lose the border of the draggable container if the container is no longer in focus
+    def focusOutEvent(self, event):
+        self.setStyleSheet("border: none;")
+        self.childWidget.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        super().focusOutEvent(event)
+    
 
     def buildDragContainerMenu(self):
 
