@@ -406,8 +406,13 @@ class DraggableContainer(QWidget):
         #if self.hasFocus() or child_widget.hasFocus():
             #only the focused container will print this line
         print(f"changedWidgetAttribute is {changedWidgetAttribute} and value is {value}")
-        if (self.hasFocus() and changedWidgetAttribute == ChangedWidgetAttribute.LoseFocus):
-            child_widget.removeWidget()
+        if hasattr(child_widget, "deselectText") and (changedWidgetAttribute == ChangedWidgetAttribute.LoseFocus):
+            print("Clear Selection Slot Called")
+            child_widget.deselectText()
+            if hasattr(self.childWidget, "checkEmpty") and isinstance(child_widget, QTextBrowser):
+                if self.childWidget.checkEmpty():
+                    print("Removing empty container")
+                    editorSignalsInstance.widgetRemoved.emit(self)
         if self.hasFocus() or child_widget.hasFocus():
             if hasattr(child_widget, "changeBulletEvent") and (changedWidgetAttribute == ChangedWidgetAttribute.Bullet):
                 print("Change Bullet Event Called")
