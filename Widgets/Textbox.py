@@ -29,6 +29,7 @@ class TextboxWidget(QTextEdit):
         self.textChanged.connect(self.textChangedEvent)
         editorSignalsInstance.widgetAttributeChanged.connect(self.widgetAttributeChanged)
 
+        
 
 
         if check_appearance() == True:
@@ -77,10 +78,12 @@ class TextboxWidget(QTextEdit):
             documentSize = document.size().toSize()
             documentHeight = documentSize.height()
             # the document height is the text height. This is to expand the widget size to match document height
-            if(newHeight < documentHeight):
-                newHeight = documentHeight
+            if(height < documentHeight):
+                height = documentHeight
                 self.resize(width, height)
-
+    def focusOutEvent(self, event):
+        super().focusOutEvent(event)
+        
 
 
     
@@ -115,6 +118,7 @@ class TextboxWidget(QTextEdit):
     # Handles events from any toolbar button
     def widgetAttributeChanged(self, changedWidgetAttribute, value):
     # dictionary of toolbar functions
+        print(f"{changedWidgetAttribute} {value}")
         attribute_functions = {
             # note: for functions with no value passed, lambda _ will allow it to pass with no value
 
@@ -226,23 +230,11 @@ class TextboxWidget(QTextEdit):
             False,
         )
         # bgColor.triggered.connect(lambda: self.setBackgroundColor(QColorDialog.getColor()))
-        bgColor.triggered.connect(
-            lambda: self.changeBackgroundColorEvent(QColorDialog.getColor())
-        )
-        textHighlightColor = build_action(
-            toolbarBottom,
-            "./Assets/icons/svg_textHighlightColor",
-            "Text Highlight Color",
-            "Text Highlight Color",
-            False,
-        )
-        textHighlightColor.triggered.connect(
-            lambda: self.changeTextHighlightColorEvent(QColorDialog.getColor())
-        )
+        bgColor.triggered.connect(lambda: self.changeBackgroundColorEvent(QColorDialog.getColor()))
+        textHighlightColor = build_action(toolbarBottom,"./Assets/icons/svg_textHighlightColor","Text Highlight Color","Text Highlight Color",False,)
+        textHighlightColor.triggered.connect(lambda: self.changeTextHighlightColorEvent(QColorDialog.getColor()))
 
-        bullets = build_action(
-            toolbarBottom, "./Assets/icons/svg_bullets", "Bullets", "Bullets", True
-        )
+        bullets = build_action(toolbarBottom, "./Assets/icons/svg_bullets", "Bullets", "Bullets", True)
         bullets.toggled.connect(lambda: self.bullet_list("bulletReg"))
 
         toolbarTop.addWidget(font)
@@ -598,7 +590,7 @@ class TextboxWidget(QTextEdit):
         
         if color.isValid():
             rgb = color.getRgb()
-            self.setStyleSheet(f"QTextBrowser {{background-color: rgb({rgb[0]}, {rgb[1]}, {rgb[2]}); }}")
+            self.setStyleSheet(f"QTextEdit {{background-color: rgb({rgb[0]}, {rgb[1]}, {rgb[2]}); }}")
         else:
             rgb = (color, g, b)
 

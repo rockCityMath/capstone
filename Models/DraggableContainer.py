@@ -53,9 +53,10 @@ class DraggableContainer(QWidget):
         self.menu = self.buildDragContainerMenu()
 
         if hasattr(self.childWidget, "newGeometryEvent"): self.newGeometry.connect(childWidget.newGeometryEvent)
-        editorSignalsInstance.widgetAttributeChanged.connect(self.deselect)
+        
+        editorSignalsInstance.widgetAttributeChanged.connect(self.deselect_and_delete)
 
-
+        
                 
     def setChildWidget(self, childWidget):
         if childWidget:
@@ -120,7 +121,7 @@ class DraggableContainer(QWidget):
         else:
             # Handle the case where self.childWidget is not a TextBox
             pass'''
-        # need to add code for setting cursor to the end of the textbox
+       
 
 
     # On double click, focus on child and make mouse events pass through this container to child
@@ -138,18 +139,19 @@ class DraggableContainer(QWidget):
         return True # Dont let the release go to the editor frame
 
     def leaveEvent(self, e: QMouseEvent):
-        if(self.childWidget.hasFocus() == False):
-            self.childWidget.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-            self.setStyleSheet("border: none;")
+        #if(self.childWidget.hasFocus() == False):
+        self.childWidget.setAttribute(Qt.WA_TransparentForMouseEvents, True)
+        self.setStyleSheet("border: none;")
         # If mouse leaves draggable container, set focus to the editor
         #if self.childWidget.hasFocus():
         #    self.setFocus()'''
 
     # this is to lose the border of the draggable container if the container is no longer in focus
-    def focusOutEvent(self, event):
-        self.setStyleSheet("border: none;")
+    '''def focusOutEvent(self, event: QMouseEvent):
+        print("FOCUS OUT EVENT CALLED FROM DRAGGABLE CONTAINER")
         self.childWidget.setAttribute(Qt.WA_TransparentForMouseEvents, True)
-        super().focusOutEvent(event)
+        self.setStyleSheet("border: none;")
+        super().focusOutEvent(event)'''
     
 
     def buildDragContainerMenu(self):
@@ -175,7 +177,7 @@ class DraggableContainer(QWidget):
         copy.triggered.connect(lambda: editorSignalsInstance.widgetCopied.emit(self))
         
         paste = QAction("&Paste", self)
-        paste.triggered.connect(lambda: self.pasteWidget(event.pos()))
+        paste.triggered.connect(lambda: self.pasteWidget(self.pos()))
         
         delete = QAction("&Delete", self)
         delete.triggered.connect(lambda: editorSignalsInstance.widgetRemoved.emit(self))
@@ -405,7 +407,7 @@ class DraggableContainer(QWidget):
         self.newGeometry.emit(self.geometry())
     
     # Used for deselecting text and removing container if empty
-    def deselect(self, changedWidgetAttribute):
+    def deselect_and_delete(self, changedWidgetAttribute):
         #print(f"changedWidgetAttribute is {changedWidgetAttribute} and value is {value}")
         child_widget = self.childWidget
         
