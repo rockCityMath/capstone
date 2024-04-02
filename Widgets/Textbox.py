@@ -145,7 +145,7 @@ class TextboxWidget(QTextEdit):
             ChangedWidgetAttribute.AlignRight: lambda _: self.changeAlignmentEvent("alignRight")
         }
 
-        if self.hasFocus and changedWidgetAttribute in attribute_functions:
+        if (self.hasFocus() or self.parentWidget().hasFocus()) and changedWidgetAttribute in attribute_functions:
             print(f"{changedWidgetAttribute} {value}")
             # Calls the function in the dictionary
             attribute_functions[changedWidgetAttribute](value)
