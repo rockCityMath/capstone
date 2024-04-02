@@ -29,7 +29,6 @@ class TextboxWidget(QTextEdit):
         self.textChanged.connect(self.textChangedEvent)
         editorSignalsInstance.widgetAttributeChanged.connect(self.widgetAttributeChanged)
 
-        
 
 
         if check_appearance() == True:
@@ -37,7 +36,6 @@ class TextboxWidget(QTextEdit):
             #self.changeBackgroundColorEvent(31, 31, 30)
             self.setTextColor("white")
             self.changeAllTextColors("white")
-            self.set
         else:
             self.setStyleSheet("background-color: rgba(0, 0, 0, 0);")
             #self.changeBackgroundColorEvent(0,0,0)
@@ -118,7 +116,6 @@ class TextboxWidget(QTextEdit):
     # Handles events from any toolbar button
     def widgetAttributeChanged(self, changedWidgetAttribute, value):
     # dictionary of toolbar functions
-        print(f"{changedWidgetAttribute} {value}")
         attribute_functions = {
             # note: for functions with no value passed, lambda _ will allow it to pass with no value
 
@@ -139,16 +136,17 @@ class TextboxWidget(QTextEdit):
             # Bullet list functions
             ChangedWidgetAttribute.Bullet: lambda _: self.bullet_list("bulletReg"),
             ChangedWidgetAttribute.Bullet_Num: lambda _: self.bullet_list("bulletNum"),
-            ChangedWidgetAttribute.Bullet_Num: lambda _: self.bullet_list("bulletUpperA"),
-            ChangedWidgetAttribute.Bullet_Num: lambda _: self.bullet_list("bulletUpperR"),
+            ChangedWidgetAttribute.BulletUA: lambda _: self.bullet_list("bulletUpperA"),
+            ChangedWidgetAttribute.BulletUR: lambda _: self.bullet_list("bulletUpperR"),
 
             # Alignment functions
-            ChangedWidgetAttribute.Bullet_Num: lambda _: self.changeAlignmentEvent("alignLeft"),
-            ChangedWidgetAttribute.Bullet_Num: lambda _: self.changeAlignmentEvent("alignCenter"),
-            ChangedWidgetAttribute.Bullet_Num: lambda _: self.changeAlignmentEvent("alignRight")
+            ChangedWidgetAttribute.AlignLeft: lambda _: self.changeAlignmentEvent("alignLeft"),
+            ChangedWidgetAttribute.AlignCenter: lambda _: self.changeAlignmentEvent("alignCenter"),
+            ChangedWidgetAttribute.AlignRight: lambda _: self.changeAlignmentEvent("alignRight")
         }
 
         if self.hasFocus and changedWidgetAttribute in attribute_functions:
+            print(f"{changedWidgetAttribute} {value}")
             # Calls the function in the dictionary
             attribute_functions[changedWidgetAttribute](value)
         else:
