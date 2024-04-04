@@ -584,10 +584,7 @@ class TextboxWidget(QTextEdit):
         if color.isValid():
             rgb = color.getRgb()
             self.setStyleSheet(f"QTextEdit {{background-color: rgb({rgb[0]}, {rgb[1]}, {rgb[2]}); }}")
-        else:
-            rgb = (color, g, b)
 
-        self.setStyleSheet(f"background-color: rgb({rgb[0]}, {rgb[1]}, {rgb[2]});")
         self.deselectText()
 
     # Changes textbox background color

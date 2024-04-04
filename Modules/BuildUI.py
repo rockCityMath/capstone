@@ -212,12 +212,9 @@ def build_toolbar(editor):
 
     bold = build_action(editor.homeToolbar, './Assets/icons/bold', "Bold", "Bold", True)
     bold.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontBold, None))
-    #if(checkMade == CheckSignal.BoldCheck):
-    #    handleCheck(bold)
 
     italic = build_action(editor.homeToolbar, './Assets/icons/italic.svg', "Italic", "Italic", True)
     italic.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontItalic, None))
-    italic.setChecked(True)
 
     underline = build_action(editor.homeToolbar, './Assets/icons/underline.svg', "Underline", "Underline", True)
     underline.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontUnderline, None))
