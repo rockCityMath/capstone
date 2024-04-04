@@ -9,7 +9,7 @@ from PySide6.QtWidgets import *
 from Models.DraggableContainer import DraggableContainer
 from Widgets.Textbox import *
 
-from Modules.EditorSignals import editorSignalsInstance, ChangedWidgetAttribute
+from Modules.EditorSignals import editorSignalsInstance, ChangedWidgetAttribute, CheckSignal
 from Modules.Undo import UndoHandler
 from Widgets.Table import *
 
@@ -143,6 +143,10 @@ def build_menubar(editor):
     plugins.addAction(add_widget)    
 
 def build_toolbar(editor):
+    def handleCheck(action):
+        action.setChecked(True)
+    #editorSignalsInstance.checkMade.connect(editor.checkMade)
+
     # homeToolbar code
     editor.homeToolbar = QToolBar()
     editor.homeToolbar.setObjectName('homeToolbar')
@@ -217,13 +221,16 @@ def build_toolbar(editor):
 
     strikethrough = build_action(editor.homeToolbar, './Assets/icons/svg_strikethrough.svg', "Strikethrough", "Strikethrough", True)
     strikethrough.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Strikethrough, None))
+
+    refactor = build_action(editor.homeToolbar, './Assets/icons/bold', "Bold", "Bold", True)
+    refactor.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Refactor, None))
     
     delete = build_action(editor.homeToolbar, './Assets/icons/svg_delete', "Delete", "Delete", False)
     delete.triggered.connect(lambda: editorSignalsInstance.widgetRemoved.emit(DraggableContainer))
     
     # Bullets with placeholder for more bullet options
-    bullet = build_action(editor.homeToolbar, './Assets/icons/svg_bullets', "Bullets", "Bullets", False)
-    bullet.triggered.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Bullet, None))
+    bullets = build_action(editor.homeToolbar, './Assets/icons/svg_bullets', "Bullets", "Bullets", False)
+    bullets.triggered.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Bullet, None))
 
     editor.homeToolbar.addWidget(spacer1)
     editor.homeToolbar.addActions([paste, cut, copy])
@@ -235,7 +242,7 @@ def build_toolbar(editor):
     
     editor.homeToolbar.addSeparator()
     
-    editor.homeToolbar.addActions([bold, italic, underline, strikethrough, fontColor, textHighlightColor, bgColor, delete, bullet])
+    editor.homeToolbar.addActions([bold, italic, underline, strikethrough, refactor, fontColor, textHighlightColor, bgColor, delete, bullets])
 
     # numbering menu start
     numbering_menu = QMenu(editor)
