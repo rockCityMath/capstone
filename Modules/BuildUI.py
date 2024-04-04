@@ -232,8 +232,8 @@ def build_toolbar(editor):
     delete.triggered.connect(lambda: editorSignalsInstance.widgetRemoved.emit(DraggableContainer))
     
     # Bullets with placeholder for more bullet options
-    bullet = build_action(editor.homeToolbar, './Assets/icons/svg_bullets', "Bullets", "Bullets", False)
-    bullet.triggered.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Bullet, None))
+    bullets = build_action(editor.homeToolbar, './Assets/icons/svg_bullets', "Bullets", "Bullets", False)
+    bullets.triggered.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Bullet, None))
 
     editor.homeToolbar.addWidget(spacer1)
     editor.homeToolbar.addActions([paste, cut, copy])
@@ -245,7 +245,7 @@ def build_toolbar(editor):
     
     editor.homeToolbar.addSeparator()
     
-    editor.homeToolbar.addActions([bold, italic, underline, strikethrough, refactor, fontColor, textHighlightColor, bgColor, delete, bullet])
+    editor.homeToolbar.addActions([bold, italic, underline, strikethrough, refactor, fontColor, textHighlightColor, bgColor, delete, bullets])
 
     # numbering menu start
     numbering_menu = QMenu(editor)

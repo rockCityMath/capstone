@@ -144,8 +144,9 @@ class TextboxWidget(QTextEdit):
             ChangedWidgetAttribute.AlignCenter: lambda _: self.changeAlignmentEvent("alignCenter"),
             ChangedWidgetAttribute.AlignRight: lambda _: self.changeAlignmentEvent("alignRight")
         }
-
+        # if current widget is in focus
         if (self.hasFocus() or self.parentWidget().hasFocus()) and changedWidgetAttribute in attribute_functions:
+        #if self.hasFocus() and changedWidgetAttribute in attribute_functions:
             print(f"{changedWidgetAttribute} {value}")
             # Calls the function in the dictionary
             attribute_functions[changedWidgetAttribute](value)
@@ -220,13 +221,7 @@ class TextboxWidget(QTextEdit):
             lambda: self.setTextColorCustom(QColorDialog.getColor())
         )
 
-        bgColor = build_action(
-            toolbarBottom,
-            "./Assets/icons/svg_font_bucket",
-            "Background Color",
-            "Background Color",
-            False,
-        )
+        bgColor = build_action(toolbarBottom,"./Assets/icons/svg_font_bucket","Background Color","Background Color",False)
         # bgColor.triggered.connect(lambda: self.setBackgroundColor(QColorDialog.getColor()))
         bgColor.triggered.connect(lambda: self.changeBackgroundColorEvent(QColorDialog.getColor()))
         textHighlightColor = build_action(toolbarBottom,"./Assets/icons/svg_textHighlightColor","Text Highlight Color","Text Highlight Color",False,)
