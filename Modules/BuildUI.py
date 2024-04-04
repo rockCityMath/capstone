@@ -222,8 +222,8 @@ def build_toolbar(editor):
     strikethrough = build_action(editor.homeToolbar, './Assets/icons/svg_strikethrough.svg', "Strikethrough", "Strikethrough", True)
     strikethrough.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Strikethrough, None))
 
-    refactor = build_action(editor.homeToolbar, './Assets/icons/bold', "Bold", "Bold", True)
-    refactor.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Refactor, None))
+    #refactor = build_action(editor.homeToolbar, './Assets/icons/bold', "Bold", "Bold", True)
+    #refactor.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Refactor, None))
     
     delete = build_action(editor.homeToolbar, './Assets/icons/svg_delete', "Delete", "Delete", False)
     delete.triggered.connect(lambda: editorSignalsInstance.widgetRemoved.emit(DraggableContainer))
