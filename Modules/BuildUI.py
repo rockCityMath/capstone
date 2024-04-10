@@ -232,6 +232,11 @@ def build_toolbar(editor):
     bullets = build_action(editor.homeToolbar, './Assets/icons/svg_bullets', "Bullets", "Bullets", False)
     bullets.triggered.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Bullet, None))
 
+       
+    # Adds the undo and redo buttons to the toolbar 
+    undo = build_action(editor.homeToolbar, './Assets/icons/svg_undo', "Undo", "Undo", False)
+    redo = build_action(editor.homeToolbar, './Assets/icons/svg_redo', "Redo", "Redo", False)
+    
     editor.homeToolbar.addWidget(spacer1)
     editor.homeToolbar.addActions([paste, cut, copy])
     
