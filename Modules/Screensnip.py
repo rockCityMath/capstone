@@ -14,6 +14,7 @@ class SnippingWidget(QWidget):
     def __init__(self):
         super(SnippingWidget, self).__init__()
 
+        # Set window attributes based on the platform
         if platform == "linux":
             self.setWindowFlags(Qt.FramelessWindowHint)
             self.setAttribute(Qt.WA_TranslucentBackground)
@@ -30,6 +31,7 @@ class SnippingWidget(QWidget):
         print("SnippingWidget.start")
         SnippingWidget.is_snipping = True
 
+         # Set window opacity and cursor based on the platform
         if platform != "linux":
             self.setWindowOpacity(0.3)
 
@@ -38,6 +40,7 @@ class SnippingWidget(QWidget):
         self.show()
         print("SnippingWidget.start done")
 
+    # handle painting the snipping rectangle
     def paintEvent(self, event):
         if SnippingWidget.is_snipping:
             #brush_color = (128, 128, 255, 100)
@@ -49,11 +52,13 @@ class SnippingWidget(QWidget):
                 self.setWindowOpacity(opacity)
     
             qp = QPainter(self)
+            # Set pen and brush for drawing the rectangle
             qp.setPen(QPen(QColor('black'), lw))
             qp.setBrush(QColor(*brush_color))
             rect = QRectF(self.begin, self.end)
             qp.drawRect(rect)
         else:
+             # Reset coordinates and brush color when snipping is not in progress
             self.begin = QPoint()
             self.end = QPoint()
             brush_color = (0, 0, 0, 0)
@@ -70,18 +75,24 @@ class SnippingWidget(QWidget):
         self.update()
 
     def mouseReleaseEvent(self, event):
+
+        # Set the flag to indicate that snipping is complete
         SnippingWidget.is_snipping = False
         QApplication.restoreOverrideCursor()
+
+        # Calculate the coordinates of the snipped area
         rect = self.geometry()
         x1 = min(self.begin.x(), self.end.x()) + rect.left()
         y1 = min(self.begin.y(), self.end.y()) + rect.top()
         x2 = max(self.begin.x(), self.end.x()) + rect.left()
         y2 = max(self.begin.y(), self.end.y()) + rect.top()
 
+         # Repaint the widget and process any pending events
         self.repaint()
         QApplication.processEvents()
 
         try:
+            # Capture the screenshot of the snipped area
             if platform == "darwin":
                 #img = ImageGrab.grab(bbox=( (x1 ) * 2, (y1 + 55 ) * 2, (x2 ) * 2, (y2 + 55) * 2)) [may be needed for different mac version - testing in progress]
                 img = ImageGrab.grab(bbox=(x1, y1 + 55, x2, y2 + 55)) # For mac version 14.1.2
@@ -94,10 +105,12 @@ class SnippingWidget(QWidget):
 
 
         try:
+            # Convert the captured image to OpenCV format for further processing
             img = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
         except:
             img = None
-
+            
+        # Trigger the snipping completed callback with the captured image
         if self.onSnippingCompleted is not None:
             self.onSnippingCompleted(img)
 

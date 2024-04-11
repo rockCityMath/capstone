@@ -23,6 +23,8 @@ def new(editor):
 # Loads models.notebook.Notebook class from file
 def load(editor):
     print("LOADING")
+
+    # Open file dialog for selecting notebook file
     path, accept = QFileDialog.getOpenFileName(
         editor,
         'Open Notebook',
@@ -47,6 +49,7 @@ def load(editor):
 def load_most_recent_notebook(editor):
 
     print("LOAD RECENT RAN")
+    # Search for most recent notebook file
     files = []
     saves_directory = os.path.join(os.getcwd(), 'Saves')
     for file in os.listdir(saves_directory):
@@ -60,6 +63,7 @@ def load_most_recent_notebook(editor):
         if (f.endswith(".on") or f.endswith(".ontemp")):
             print("FOUND: " + str(f))
             try:
+                # Open and load the notebook
                 # prob need load from file function, dup functionality
                 file = open(os.path.join(os.getcwd() + "\\Saves", f), 'rb')
                 destroy(editor)

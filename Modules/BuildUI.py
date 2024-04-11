@@ -26,6 +26,8 @@ def build_ui(editor):
     editor.resize(800, 450)
     editor.setAcceptDrops(True)
 
+
+    # Checks wether mac is in dark mode, then sets proper window css
     if check_appearance() == False:
         with open('./Styles/styles.qss',"r") as fh:
             editor.setStyleSheet(fh.read())
@@ -100,6 +102,8 @@ def build_ui(editor):
     #editor.restoreGeometry(editor.settings.value("geometry", editor.saveGeometry()))
     #editor.restoreState(editor.settings.value("windowState", editor.saveState()))
 
+# Constructs the menu bar with different menus like File, Home, Insert, Draw, and Plugins
+# It adds actions to these menus and connects them to their functions
 def build_menubar(editor):
     editor.menubar = editor.menuBar()
     
@@ -142,6 +146,8 @@ def build_menubar(editor):
     draw.addAction(toggle_draw_toolbar)
     plugins.addAction(add_widget)    
 
+# Constructs toolbars for different functionalities like home, insert, and draw
+# It adds actions and buttons to these toolbars and connects them to their functions
 def build_toolbar(editor):
     def handleCheck(action):
         action.setChecked(True)
@@ -386,6 +392,7 @@ def check_appearance():
                             stderr=subprocess.PIPE, shell=True)
     return bool(p.communicate()[0])  
 
+# toggles the visibility of the specified toolbar based on user interaction
 def set_toolbar_visibility(editor, triggered_toolbar):
     # Find all toolbars in the editor
     toolbars = editor.findChildren(QToolBar)
@@ -400,6 +407,7 @@ def set_toolbar_visibility(editor, triggered_toolbar):
             # Hide all other toolbars
             toolbar.setVisible(False)
 
+# opens a color dialog for selecting font color or background color
 def openGetColorDialog(purpose):
     color = QColorDialog.getColor()
     if color.isValid():
@@ -408,13 +416,15 @@ def openGetColorDialog(purpose):
         elif purpose == "background":
             editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.BackgroundColor, color)
 
+# creates a QAction object with the specified parameters
 def build_action(parent, icon_path, action_name, tooltip, checkable):
     action = QAction(QIcon(icon_path), action_name, parent)
     action.setObjectName(action_name)
     action.setStatusTip(tooltip)
     action.setCheckable(checkable)
     return action
-    
+
+# creates a QPushButton widget with the specified parameters  
 def build_button(parent, icon_path, text, tooltip, checkable):
     button = QPushButton(parent)
     button.setIcon(QIcon(icon_path))
@@ -423,7 +433,8 @@ def build_button(parent, icon_path, text, tooltip, checkable):
     button.setToolTip(tooltip)
     button.setCheckable(checkable)
     return button
-
+    
+# creates a QToolButton widget with an associated menu
 def build_menubutton(parent, icon_path, text, tooltip, style, menu):
     button = QToolButton(parent)
     button.setIconSize(QSize(18,18))

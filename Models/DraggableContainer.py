@@ -25,9 +25,10 @@ class DraggableContainer(QWidget):
     menu = None
     mode = Mode.NONE
     position = None
-    outFocus = Signal(bool)
-    newGeometry = Signal(QRect)
+    outFocus = Signal(bool) # Signal emitted when the container loses focus
+    newGeometry = Signal(QRect) # Signal emitted when the container's geometry changes
 
+    #  Initializes a DraggableContainer object
     def __init__(self, childWidget, editorFrame):
         super().__init__(parent=editorFrame)
 
@@ -75,6 +76,7 @@ class DraggableContainer(QWidget):
             self.resize(self.childWidget.size())
         return False
 
+    # Displays the container menu at a given position
     def popupShow(self, pt: QPoint):
         global_ = self.mapToGlobal(pt)
         self.m_showMenu = True
@@ -152,8 +154,8 @@ class DraggableContainer(QWidget):
         self.childWidget.setAttribute(Qt.WA_TransparentForMouseEvents, True)
         self.setStyleSheet("border: none;")
         super().focusOutEvent(event)'''
-    
 
+    # Builds and returns the context menu for the container
     def buildDragContainerMenu(self):
 
         # Get custom menu actions from child widget
@@ -276,7 +278,7 @@ class DraggableContainer(QWidget):
             if type(item) != QWidgetAction:
                 menu.addAction(item)
 
-        return menu
+        return menu  # returns the QMenu: The constructed context menu
 
     # Determine which cursor to show and which mode to be in when user is interacting with the box
     def setCursorShape(self, e_pos: QPoint):
@@ -440,13 +442,16 @@ class DraggableContainer(QWidget):
         else:
             super().keyReleaseEvent(event)
 
+    # Pastes a widget at the specified position
     def pasteWidget(self, clickPos):
         widgetOnClipboard = self.clipboard.getWidgetToPaste()
 
-        dc = DraggableContainer(widgetOnClipboard, self)
+        dc = DraggableContainer(widgetOnClipboard, self) # Create a new DraggableContainer with the widget to paste
         self.undoHandler.pushCreate(dc)
         editorSignalsInstance.widgetAdded.emit(dc)  # Notify section that widget was added
         editorSignalsInstance.changeMade.emit()
+
+        # Move the container to the specified position and show it
         dc.move(clickPos.x(), clickPos.y())
         dc.show()
 
