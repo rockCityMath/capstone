@@ -25,8 +25,10 @@ class ChangedWidgetAttribute(Enum):
     PaperColor = 16
 
     Strikethrough = 17
+    Refactor = 18
 
-
+class CheckSignal(Enum):
+    BoldCheck = 0
 # Cant be statically typed because importing the classes causes circular imports
 
 class EditorSignals(QObject):
@@ -51,5 +53,8 @@ class EditorSignals(QObject):
 
     # Clear Selection
     loseFocus = Signal()
+
+    # used for checking if a toggle should be toggled off
+    checkMade = Signal()
 
 editorSignalsInstance = EditorSignals()

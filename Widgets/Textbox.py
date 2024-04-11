@@ -1,14 +1,14 @@
 from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
-from Modules.EditorSignals import editorSignalsInstance
+from Modules.EditorSignals import editorSignalsInstance, ChangedWidgetAttribute, CheckSignal
 
 import subprocess
 
 FONT_SIZES = [7, 8, 9, 10, 11, 12, 13, 14, 18, 24, 36, 48, 64, 72, 96, 144, 288]
 
 
-class TextboxWidget(QTextBrowser):
+class TextboxWidget(QTextEdit):
     def __init__(self, x, y, w=15, h=30, t=""):
         super().__init__()
 
@@ -18,20 +18,24 @@ class TextboxWidget(QTextBrowser):
             p = subprocess.Popen(cmd, stdout=subprocess.PIPE,
                                 stderr=subprocess.PIPE, shell=True)
             return bool(p.communicate()[0])   
-
+        
         self.setGeometry(x, y, w, h)  # This sets geometry of DraggableObject
         self.setText(t)
+
+        # self.setStyleSheet("background-color: rgba(0, 0, 0, 0); selection-background-color: #FFFFFF;")
 
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         self.textChanged.connect(self.textChangedEvent)
+        editorSignalsInstance.widgetAttributeChanged.connect(self.widgetAttributeChanged)
+
+
 
         if check_appearance() == True:
             self.setStyleSheet("background-color: rgba(31,31,30,255);")
             #self.changeBackgroundColorEvent(31, 31, 30)
             self.setTextColor("white")
             self.changeAllTextColors("white")
-
         else:
             self.setStyleSheet("background-color: rgba(0, 0, 0, 0);")
             #self.changeBackgroundColorEvent(0,0,0)
@@ -46,6 +50,11 @@ class TextboxWidget(QTextBrowser):
         if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Tab:
             self.handleTabKey()
             return True  # To prevent the default Tab key behavior
+        '''if event.type() == QEvent.FocusOut:
+            if self.checkEmpty():
+                parent = self.parent()
+                if parent is not None:
+                    parent.deleteLater()'''
 
         return super(TextboxWidget, self).eventFilter(obj, event)
 
@@ -55,9 +64,27 @@ class TextboxWidget(QTextBrowser):
         cursor = self.cursorForPosition(event.pos())
         self.setTextCursor(cursor)
 
+    # Initial size is w=15, h=30. once changes to textbox has been detected, change the size
     def textChangedEvent(self):
+        width = 150
+        height = 50
         if len(self.toPlainText()) < 2:
-            self.resize(100, 100)
+            self.resize(width, height)
+        else:
+            # handle cases where text reaches past the textbox
+            document = self.document()
+            documentSize = document.size().toSize()
+            documentHeight = documentSize.height()
+            # the document height is the text height. This is to expand the widget size to match document height
+            if(height < documentHeight):
+                height = documentHeight
+                self.resize(width, height)
+    def focusOutEvent(self, event):
+        super().focusOutEvent(event)
+        
+
+
+    
 
     @staticmethod
     def new(clickPos: QPoint):
@@ -85,6 +112,47 @@ class TextboxWidget(QTextBrowser):
         if len(self.toPlainText()) < 1:
             return True
         return False
+    
+    # Handles events from any toolbar button
+    def widgetAttributeChanged(self, changedWidgetAttribute, value):
+    # dictionary of toolbar functions
+        attribute_functions = {
+            # note: for functions with no value passed, lambda _ will allow it to pass with no value
+
+            # font functions
+            ChangedWidgetAttribute.FontSize: lambda val: self.changeFontSizeEvent(val),
+            ChangedWidgetAttribute.FontBold: lambda _: self.changeFontBoldEvent(),
+            ChangedWidgetAttribute.FontItalic: lambda _: self.changeFontItalicEvent(),
+            ChangedWidgetAttribute.FontUnderline: lambda _: self.changeFontUnderlineEvent(),
+            ChangedWidgetAttribute.Strikethrough: lambda _: self.setStrikeOut(),
+            ChangedWidgetAttribute.Font: lambda val: self.changeFontEvent(val),
+            ChangedWidgetAttribute.FontColor: lambda val: self.changeFontColorEvent(val),
+            ChangedWidgetAttribute.TextHighlightColor: lambda val: self.changeTextHighlightColorEvent(val),
+
+            # background color functions
+            ChangedWidgetAttribute.BackgroundColor: lambda val: self.changeBackgroundColorEvent(val),
+            ChangedWidgetAttribute.PaperColor: lambda val: self.paperColor(val), # not implemented yet
+
+            # Bullet list functions
+            ChangedWidgetAttribute.Bullet: lambda _: self.bullet_list("bulletReg"),
+            ChangedWidgetAttribute.Bullet_Num: lambda _: self.bullet_list("bulletNum"),
+            ChangedWidgetAttribute.BulletUA: lambda _: self.bullet_list("bulletUpperA"),
+            ChangedWidgetAttribute.BulletUR: lambda _: self.bullet_list("bulletUpperR"),
+
+            # Alignment functions
+            ChangedWidgetAttribute.AlignLeft: lambda _: self.changeAlignmentEvent("alignLeft"),
+            ChangedWidgetAttribute.AlignCenter: lambda _: self.changeAlignmentEvent("alignCenter"),
+            ChangedWidgetAttribute.AlignRight: lambda _: self.changeAlignmentEvent("alignRight")
+        }
+        # if current widget is in focus
+        if (self.hasFocus or self.parentWidget().hasFocus) and changedWidgetAttribute in attribute_functions:
+        #if self.hasFocus() and changedWidgetAttribute in attribute_functions:
+            print(f"{changedWidgetAttribute} {value}")
+            # Calls the function in the dictionary
+            attribute_functions[changedWidgetAttribute](value)
+        else:
+            # Handle invalid attribute or other cases
+            pass
 
     def customMenuItems(self):
         def build_action(parent, icon_path, action_name, set_status_tip, set_checkable):
@@ -119,77 +187,47 @@ class TextboxWidget(QTextBrowser):
         )
         
         align_left = build_action(toolbarBottom, "./Assets/icons/svg_align_left", "Align Left", "Align Left", False)
-        align_left.triggered.connect(lambda x: self.setAlignment(Qt.AlignLeft))
+        # align_left.triggered.connect(lambda x: self.setAlignment(Qt.AlignLeft))
+        align_left.triggered.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.AlignLeft, None))
+
 
         align_center = build_action(toolbarBottom, "./Assets/icons/svg_align_center", "Align Center", "Align Center", False)
-        align_center.triggered.connect(lambda x: self.setAlignment(Qt.AlignCenter))
+        # align_center.triggered.connect(lambda x: self.setAlignment(Qt.AlignCenter))
+        align_center.triggered.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.AlignCenter, None))
+
 
         align_right = build_action(toolbarBottom, "./Assets/icons/svg_align_right", "Align Right", "Align Right", False)
         align_right.triggered.connect(lambda x: self.setAlignment(Qt.AlignRight))
+        align_right.triggered.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.AlignRight, None))
+
 
         bold = build_action(
             toolbarBottom, "./Assets/icons/svg_font_bold", "Bold", "Bold", True
         )
-        bold.toggled.connect(lambda x: self.setFontWeightCustom(700 if x else 500))
+        bold.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontBold, None))
 
-        italic = build_action(
-            toolbarBottom, "./Assets/icons/svg_font_italic", "Italic", "Italic", True
-        )
-        italic.toggled.connect(lambda x: self.setFontItalicCustom(True if x else False))
+        italic = build_action(toolbarBottom, "./Assets/icons/svg_font_italic", "Italic", "Italic", True)
+        italic.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontItalic, None))
 
-        underline = build_action(
-            toolbarBottom,
-            "./Assets/icons/svg_font_underline",
-            "Underline",
-            "Underline",
-            True,
-        )
-        underline.toggled.connect(
-            lambda x: self.setFontUnderlineCustom(True if x else False)
-        )
+        underline = build_action(toolbarBottom,"./Assets/icons/svg_font_underline","Underline","Underline",True,)
+        underline.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontUnderline, None))
 
-        strikethrough = build_action(
-            toolbarBottom,"./Assets/icons/svg_strikethrough", "Strikethrough", "Strikethrough", True
-            )
-        strikethrough.toggled.connect(lambda: self.setStrikeOut())
+        strikethrough = build_action(toolbarBottom,"./Assets/icons/svg_strikethrough", "Strikethrough", "Strikethrough", True)
+        strikethrough.toggled.connect(lambda: editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.Strikethrough, None))
 
 
-        fontColor = build_action(
-            toolbarBottom,
-            "./Assets/icons/svg_font_color",
-            "Font Color",
-            "Font Color",
-            False,
-        )
+        fontColor = build_action(toolbarBottom,"./Assets/icons/svg_font_color","Font Color","Font Color",False)
         fontColor.triggered.connect(
             lambda: self.setTextColorCustom(QColorDialog.getColor())
         )
 
-        bgColor = build_action(
-            toolbarBottom,
-            "./Assets/icons/svg_font_bucket",
-            "Background Color",
-            "Background Color",
-            False,
-        )
+        bgColor = build_action(toolbarBottom,"./Assets/icons/svg_font_bucket","Background Color","Background Color",False)
         # bgColor.triggered.connect(lambda: self.setBackgroundColor(QColorDialog.getColor()))
-        bgColor.triggered.connect(
-            lambda: self.changeBackgroundColorEvent(QColorDialog.getColor())
-        )
-        textHighlightColor = build_action(
-            toolbarBottom,
-            "./Assets/icons/svg_textHighlightColor",
-            "Text Highlight Color",
-            "Text Highlight Color",
-            False,
-        )
-        textHighlightColor.triggered.connect(
-            lambda: self.changeTextHighlightColorEvent(QColorDialog.getColor())
-        )
+        bgColor.triggered.connect(lambda: self.changeBackgroundColorEvent(QColorDialog.getColor()))
+        textHighlightColor = build_action(toolbarBottom,"./Assets/icons/svg_textHighlightColor","Text Highlight Color","Text Highlight Color",False,)
+        textHighlightColor.triggered.connect(lambda: self.changeTextHighlightColorEvent(QColorDialog.getColor()))
 
-        bullets = build_action(
-            toolbarBottom, "./Assets/icons/svg_bullets", "Bullets", "Bullets", True
-        )
+        bullets = build_action(toolbarBottom, "./Assets/icons/svg_bullets", "Bullets", "Bullets", True)
         bullets.toggled.connect(lambda: self.bullet_list("bulletReg"))
 
         toolbarTop.addWidget(font)
@@ -545,11 +583,8 @@ class TextboxWidget(QTextBrowser):
         
         if color.isValid():
             rgb = color.getRgb()
-            self.setStyleSheet(f"QTextBrowser {{background-color: rgb({rgb[0]}, {rgb[1]}, {rgb[2]}); }}")
-        else:
-            rgb = (color, g, b)
+            self.setStyleSheet(f"QTextEdit {{background-color: rgb({rgb[0]}, {rgb[1]}, {rgb[2]}); }}")
 
-        self.setStyleSheet(f"background-color: rgb({rgb[0]}, {rgb[1]}, {rgb[2]});")
         self.deselectText()
 
     # Changes textbox background color
@@ -607,3 +642,38 @@ class TextboxWidget(QTextBrowser):
         #cursor.movePosition(QTextCursor.End)
         self.setTextCursor(cursor)
         #self.setFocus()
+
+
+
+    def refactorTest(self):
+        cursor = self.textCursor()
+        current_format = cursor.charFormat()
+
+        # Checks if currently selected text is bold
+        is_bold = current_format.fontWeight() == 700
+
+        # toggles the italics
+        if is_bold:
+            current_format.setFontWeight(500)
+        else:
+            current_format.setFontWeight(700)
+        # Apply modified format to selected text
+        cursor.setCharFormat(current_format)
+        cursor.mergeCharFormat(format)
+        # Emit signal if no text is bold to toggle bold off
+        if not is_bold:
+            editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontBold, None)
+        # Update text cursor with modified format
+        self.setTextCursor(cursor)
+
+    def selectAllText(self):
+        print("Select All Text function from textwidget called")
+        cursor = self.textCursor()
+        cursor.setPosition(0)
+        cursor.movePosition(QTextCursor.End, QTextCursor.KeepAnchor)
+        self.setTextCursor(cursor)
+
+    def removeWidget(self):
+        if(self.checkEmpty()):
+            print("removing widget")
+            editorSignalsInstance.widgetRemoved.emit(self)

@@ -40,9 +40,28 @@ class ImageWidget(QLabel):
 
         self.persistantGeometry = newGeometry
 
+    '''@staticmethod
+    def new(clickPos):
+
+        # Get path from user
+        path, _ = QFileDialog.getOpenFileName(QWidget(), 'Add Image')
+        if path == "": return
+
+        # Get image size
+        image_matrix = cv2.imread(path)
+        h, w, _ = image_matrix.shape
+
+        # Create image and add to notebook
+        h, w, _ = image_matrix.shape
+        image = ImageWidget(clickPos.x(), clickPos.y(), w, h, image_matrix) # Note: the editorframe will apply pos based on event
+
+        return image
+    '''
     # uses inbuilt qt file dialog 
     @staticmethod
     def new(clickPos):
+
+        
         # Create a dummy parent widget for the file dialog
         dummy_parent = QWidget()
 
@@ -81,8 +100,44 @@ class ImageWidget(QLabel):
     def __setstate__(self, state):
         self.__init__(state['geometry'].x(), state['geometry'].y(), state['geometry'].width(), state['geometry'].height(), state['image_matrix'])
 
-    # not necessary to have a top toolbar for image
-     
+    def customMenuItems(self):
+        def build_action(parent, icon_path, action_name, set_status_tip, set_checkable):
+            action = QAction(QIcon(icon_path), action_name, parent)
+            action.setStatusTip(set_status_tip)
+            action.setCheckable(set_checkable)
+            return action
+
+
+        toolbarBottom = QToolBar()
+        toolbarBottom.setIconSize(QSize(16, 16))
+        toolbarBottom.setMovable(False)
+
+        #crop = build_action(toolbarTop, './Assets/icons/svg_crop', "Crop", "Crop", False)
+        
+        flipHorizontal = build_action(toolbarBottom, './Assets/icons/svg_flip_horizontal', "Horizontal Flip", "Horizontal Flip", False)
+        flipHorizontal.triggered.connect(self.flipHorizontal)
+        flipVertical = build_action(toolbarBottom, './Assets/icons/svg_flip_vertical', "Vertical Flip", "Vertical Flip", False)
+        flipVertical.triggered.connect(self.flipVertical)
+
+        rotateLeftAction = build_action(toolbarBottom, './Assets/icons/svg_rotate_left', "Rotate 90 degrees Left", "Rotate 90 degrees Left", False)
+        rotateLeftAction.triggered.connect(self.rotate90Left)
+        rotateRightAction = build_action(toolbarBottom, './Assets/icons/svg_rotate_right', "Rotate 90 degrees Right", "Rotate 90 degrees Right", False)
+        
+        rotateRightAction.triggered.connect(self.rotate90Right)
+
+        shrinkImageAction = build_action(toolbarBottom, 'Assets/icons/svg_shrink', "Shrink", "Shrink", False)
+        shrinkImageAction.triggered.connect(self.shrinkImage)
+        expandImageAction = build_action(toolbarBottom, 'Assets/icons/svg_expand', "Expand", "Expand", False)
+        expandImageAction.triggered.connect(self.expandImage)
+
+
+        toolbarBottom.addActions([rotateLeftAction, rotateRightAction, flipHorizontal, flipVertical, shrinkImageAction, expandImageAction])
+
+        qwaBottom = QWidgetAction(self)
+        qwaBottom.setDefaultWidget(toolbarBottom)
+
+        return [qwaBottom] 
+        
     def flipVertical(self):
         # Flip the image matrix vertically using OpenCV
         parent_widget = self.parentWidget()
