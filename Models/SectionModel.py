@@ -6,7 +6,7 @@ from typing import List
 class SectionModel:
     def __init__(self, title: str):
         self.title = title
-        self.widgets: List[DraggableContainer] = []
+        self.widgets: List[DraggableContainer] = [] # List of draggable containers in the section, each container holds an instance of a widget (ex. TextboxWidget)
 
     # When saving, convert the list of DraggableContainers to a list of their child widget's models
     def __getstate__(self):

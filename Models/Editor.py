@@ -19,7 +19,7 @@ from Modules.Titlebar import Build_titlebar
 class Editor(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint) 
         # self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.CustomizeWindowHint) # This changes the window back to a state that allows resizing
         self.notebook = NotebookModel('Untitled Notebook')    # Current notebook object
         # self.selected = None                                  # Selected object (for font attributes of TextBox)
@@ -34,15 +34,13 @@ class Editor(QMainWindow):
         self.autosaver = Autosaver(self) # Waits for change signals and saves the notebook
         self.setFocus()
 
-        self.settings = QSettings("UNT - Team Olive", "OpenNote")
+        self.settings = QSettings("UNT - Team Olive", "OpenNote") #pre-saved settings needed for window state restoration
 
         build_ui(self)
         action_names = self.save_toolbar_actions([self.homeToolbar, self.insertToolbar, self.drawToolbar])
         self.titlebar.set_action_names(action_names)
 
-    
     def closeEvent(self, event):
-        # Save window size and position before exiting
 
         print("Window closing event triggered")
         
@@ -50,8 +48,8 @@ class Editor(QMainWindow):
         self.settings.setValue("windowState", self.saveState())
         super().closeEvent(event)
 
+    # Handles the window showing event, it restores the window's geometry and state
     def showEvent(self, event):
-        # Restores window size and position
 
         print("Window showing event triggered")
 
@@ -61,12 +59,14 @@ class Editor(QMainWindow):
     
     # def focusInEvent(self, event):
     #     self.repaint()
+    # Handles changes in window state, particularly the window state change event
     def changeEvent(self, event):
         if event.type() == QEvent.Type.WindowStateChange:
             self.titlebar.window_state_changed(self.windowState())
         super().changeEvent(event)
         event.accept()
 
+    # mousePress, mouseMove, and mouseRelease handle mouse move events inside the window
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.moveFlag = True
@@ -82,15 +82,17 @@ class Editor(QMainWindow):
     def mouseReleaseEvent(self, QMouseEvent):
         self.moveFlag = False  
 
+    # Collects action names from the toolbars
     def save_toolbar_actions(self, toolbars):
         action_names = []
-        for toolbar in toolbars:
+        for toolbar in toolbars: #loops through all toolbars 
             for action in toolbar.actions():
                 if action.objectName():
-                    action_names.append(action.objectName())
+                    action_names.append(action.objectName())  # Add the object name of the action to the list
 
+             # Loop through child widgets of the toolbar (buttons, tool buttons, combo boxes)
             for widget in toolbar.findChildren(QPushButton) + toolbar.findChildren(QToolButton) + toolbar.findChildren(QComboBox):
                 if widget.objectName() and widget.objectName() != "qt_toolbar_ext_button":
-                    action_names.append(widget.objectName())
+                    action_names.append(widget.objectName()) # Add the object name of the widget to the list
         
-        return action_names
+        return action_names  # Return the list of action names collected from the toolbars
