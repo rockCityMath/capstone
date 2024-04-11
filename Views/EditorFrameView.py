@@ -23,7 +23,7 @@ import subprocess
 
 # Handles all widget display (could be called widget view, but so could draggablecontainer)
 class EditorFrameView(QWidget):
-    SETTINGS_KEY = "BackgroundColor"
+    SETTINGS_KEY = "BackgroundColor" # Key for saving the background color setting
 
     def __init__(self, editor):
         super(EditorFrameView, self).__init__()
@@ -36,6 +36,7 @@ class EditorFrameView(QWidget):
                                 stderr=subprocess.PIPE, shell=True)
             return bool(p.communicate()[0])  
 
+        # Reference to the main editor window
         self.editor = editor # Store reference to the editor (QMainWindow)
         self.editorFrame = QFrame(editor)
 
@@ -89,6 +90,7 @@ class EditorFrameView(QWidget):
     def pasteWidget(self, clickPos):
         widgetOnClipboard = self.clipboard.getWidgetToPaste()
 
+        # Create draggable container for pasted widget
         dc = DraggableContainer(widgetOnClipboard, self)
         self.undoHandler.pushCreate(dc)
         editorSignalsInstance.widgetAdded.emit(dc)  # Notify section that widget was added
@@ -104,6 +106,7 @@ class EditorFrameView(QWidget):
             if imageMatrix is None:
                 return
 
+            #Create image widget from the captured image
             widgetModel = ImageWidget.newFromMatrix(clickPos, imageMatrix)
             dc = DraggableContainer(widgetModel, self)
             self.undoHandler.pushCreate(dc)
@@ -249,13 +252,17 @@ class EditorFrameView(QWidget):
 
     def insertLink(self, clickPos):
         link_dialog = LinkDialog()
-        result = link_dialog.exec_()
+        result = link_dialog.exec_() #Execute the dialog and wait for user input
         if result == QDialog.Accepted:
-            link_address, display_text = link_dialog.get_link_data()
-            textboxWidget = TextboxWidget.new(clickPos)
-            textboxWidget.insertTextLink(link_address, display_text)
+
+            link_address, display_text = link_dialog.get_link_data()  # Get the link address and display text from the dialog
+            textboxWidget = TextboxWidget.new(clickPos)  # Create a new TextboxWidget at the specified position
+            textboxWidget.insertTextLink(link_address, display_text) # Insert the hyperlink into the TextboxWidget
+
+            # Create a DraggableContainer for the TextboxWidget and show it
             dc = DraggableContainer(textboxWidget, self)
             dc.show()
+
             self.undoHandler.pushCreate(dc)
             editorSignalsInstance.widgetAdded.emit(dc)
             editorSignalsInstance.changeMade.emit()
@@ -373,6 +380,7 @@ class EditorFrameView(QWidget):
     def slot_action1(self, item):
         print("Action 1 triggered")
 
+    #  Handles changes to the background color of the editor frame.
     def pageColor(self, color: QColor):
         print("CHANGE BACKGROUND COLOR EVENT")
         if color.isValid():
@@ -380,15 +388,18 @@ class EditorFrameView(QWidget):
             self.editorFrame.setStyleSheet(f"background-color: {color.name()};")
             self.saveBackgroundColor()
 
+    #Loads the previously saved background color from settings
     def loadBackgroundColor(self):
         settings = QSettings()
         color = settings.value(self.SETTINGS_KEY, type=QColor)
         return color
 
+    #  Saves the current background color to settings
     def saveBackgroundColor(self):
         settings = QSettings()
         settings.setValue(self.SETTINGS_KEY, self.currentBackgroundColor)
 
+    # Retrieves the current background color of the editor frame
     def getCurrentBackgroundColor(self):
         return self.currentBackgroundColor
 

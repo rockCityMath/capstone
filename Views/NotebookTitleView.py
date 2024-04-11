@@ -9,6 +9,7 @@ class NotebookTitleView(QWidget):
 
         self.notebookTitle = notebookTitle # Reference to the title on the notebook model
 
+        # Creating the QTextEdit widget for displaying and editing the title
         self.titleWidget = QTextEdit()
         self.titleWidget.setText(self.notebookTitle)
         self.titleWidget.setFixedHeight(30)
