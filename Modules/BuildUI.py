@@ -35,8 +35,9 @@ def build_ui(editor):
         with open('./Styles/stylesDark.qss',"r") as fh:
             editor.setStyleSheet(fh.read())
 
-    build_menubar(editor)
-    build_toolbar(editor)
+    build_tabbar(editor)
+    # build_menubar(editor)
+    # build_toolbar(editor)
 
     # Main layout of the app
     gridLayout = QGridLayout()
@@ -61,10 +62,11 @@ def build_ui(editor):
     barsLayout.setSpacing(0)
 
     # Add the bars to the layout with individual margins
-    barsLayout.addWidget(editor.menubar)
-    barsLayout.addWidget(editor.homeToolbar)
-    barsLayout.addWidget(editor.insertToolbar)
-    barsLayout.addWidget(editor.drawToolbar)
+    barsLayout.addWidget(editor.tabbar)
+    # barsLayout.addWidget(editor.menubar)
+    # barsLayout.addWidget(editor.homeToolbar)
+    # barsLayout.addWidget(editor.insertToolbar)
+    # barsLayout.addWidget(editor.drawToolbar)
 
     topSideLayout.addWidget(editor.titlebar, 0)
     topSideLayout.addWidget(barsLayoutContainerWidget, 1)
@@ -102,64 +104,27 @@ def build_ui(editor):
     #editor.restoreGeometry(editor.settings.value("geometry", editor.saveGeometry()))
     #editor.restoreState(editor.settings.value("windowState", editor.saveState()))
 
-# Constructs the menu bar with different menus like File, Home, Insert, Draw, and Plugins
-# It adds actions to these menus and connects them to their functions
-def build_menubar(editor):
-    editor.menubar = editor.menuBar()
-    
-    file = editor.menubar.addMenu('&File')
-    home = editor.menubar.addMenu('&Home')
-    insert = editor.menubar.addMenu('&Insert')
-    draw = editor.menubar.addMenu('&Draw')
-    plugins = editor.menubar.addMenu('&Plugins')
+# Constructs the tab bar with different tabs like File, Home, Insert, Draw, and Plugins
+# It adds toolbars to these tabs and connects them to their functions
+def build_tabbar(editor):
+    editor.tabbar = QTabWidget()
+    editor.tabbar.setTabsClosable(False)
 
-    new_file = build_action(editor, './Assets/icons/svg_file_open', 'New Notebook', 'New Notebook', False)
-    new_file.setShortcut(QKeySequence.StandardKey.New)
-    new_file.triggered.connect(lambda: new(editor))
+    editor.fileToolbar = QToolBar()
+    editor.homeToolbar = QToolBar()
+    editor.insertToolbar = QToolBar()
+    editor.drawToolbar = QToolBar()
+    editor.pluginToolbar = QToolBar()
 
-    open_file = build_action(editor, './Assets/icons/svg_file_open', 'Open Notebook', 'Open Notebook', False)
-    open_file.setShortcut(QKeySequence.StandardKey.Open)
-    open_file.triggered.connect(lambda: load(editor))
 
-    save_file = build_action(editor, './Assets/icons/svg_file_save', 'Save Notebook', 'Save Notebook', False)
-    save_file.setShortcut(QKeySequence.StandardKey.Save)
-    save_file.triggered.connect(lambda: save(editor))
+    # Toolbars
+    # Constructs toolbars for different functionalities like home, insert, and draw
+    # It adds actions and buttons to these toolbars and connects them to their functions
+    # ---------------------------------------------------------------------------------
 
-    save_fileAs = build_action(editor, './Assets/icons/svg_file_save', 'Save Notebook As...', 'Save Notebook As', False)
-    save_fileAs.setShortcut(QKeySequence.fromString('Ctrl+Shift+S'))
-    save_fileAs.triggered.connect(lambda: saveAs(editor))
-
-    toggle_home_toolbar = build_action(editor, '', 'Toggle Home Toolbar', 'Toggle Home Toolbar', False)
-    toggle_home_toolbar.triggered.connect(lambda: set_toolbar_visibility(editor, 'homeToolbar'))
-
-    toggle_insert_toolbar = build_action(editor, '', 'Toggle Insert Toolbar', 'Toggle Insert Toolbar', False)
-    toggle_insert_toolbar.triggered.connect(lambda: set_toolbar_visibility(editor, 'insertToolbar'))
-    
-    toggle_draw_toolbar = build_action(editor, '', 'Toggle Draw Toolbar', 'Toggle Draw Toolbar', False)
-    toggle_draw_toolbar.triggered.connect(lambda: set_toolbar_visibility(editor, 'drawToolbar'))
-
-    add_widget = build_action(editor, './Assets/icons/svg_question', 'Add Custom Widget', 'Add Custom Widget', False)
-
-    file.addActions([new_file, open_file, save_file, save_fileAs])
-    home.addAction(toggle_home_toolbar)
-    insert.addAction(toggle_insert_toolbar)
-    draw.addAction(toggle_draw_toolbar)
-    plugins.addAction(add_widget)    
-
-# Constructs toolbars for different functionalities like home, insert, and draw
-# It adds actions and buttons to these toolbars and connects them to their functions
-def build_toolbar(editor):
     def handleCheck(action):
         action.setChecked(True)
     #editorSignalsInstance.checkMade.connect(editor.checkMade)
-
-    # homeToolbar code
-    editor.homeToolbar = QToolBar()
-    editor.homeToolbar.setObjectName('homeToolbar')
-    editor.homeToolbar.setIconSize(QSize(18, 18))
-    editor.homeToolbar.setMovable(False)
-    editor.homeToolbar.setFixedHeight(40)
-    editor.addToolBar(Qt.ToolBarArea.TopToolBarArea, editor.homeToolbar)
 
     # For adding space to the left the first button added to a toolbar
     spacer1 = QWidget()
@@ -173,6 +138,46 @@ def build_toolbar(editor):
     spacer3 = QWidget()
     spacer3.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
     spacer3.setFixedWidth(3)
+
+    # ---------------------------------------------------------------------------------
+    # fileToolbar code
+
+    editor.fileToolbar.setObjectName('fileToolbar')
+    editor.fileToolbar.setIconSize(QSize(18,18))
+    editor.fileToolbar.setMovable(False)
+    editor.fileToolbar.setVisible(False)
+    editor.fileToolbar.setFixedHeight(40)
+    editor.addToolBar(Qt.ToolBarArea.TopToolBarArea, editor.fileToolbar)
+
+    new_file = build_button(editor.fileToolbar, './Assets/icons/svg_file_open', 'New Notebook', 'New Notebook', False)
+    new_file.setShortcut(QKeySequence.StandardKey.New)
+    new_file.clicked.connect(lambda: new(editor))
+
+    open_file = build_button(editor.fileToolbar, './Assets/icons/svg_file_open', 'Open Notebook', 'Open Notebook', False)
+    open_file.setShortcut(QKeySequence.StandardKey.Open)
+    open_file.clicked.connect(lambda: load(editor))
+
+    save_file = build_button(editor.fileToolbar, './Assets/icons/svg_file_save', 'Save Notebook', 'Save Notebook', False)
+    save_file.setShortcut(QKeySequence.StandardKey.Save)
+    save_file.clicked.connect(lambda: save(editor))
+
+    save_fileAs = build_button(editor.fileToolbar, './Assets/icons/svg_file_save', 'Save Notebook As...', 'Save Notebook As', False)
+    save_fileAs.setShortcut(QKeySequence.fromString('Ctrl+Shift+S'))
+    save_fileAs.clicked.connect(lambda: saveAs(editor))
+
+    editor.fileToolbar.addWidget(new_file)
+    editor.fileToolbar.addWidget(open_file)
+    editor.fileToolbar.addWidget(save_file)
+    editor.fileToolbar.addWidget(save_fileAs)
+
+    # ---------------------------------------------------------------------------------
+    # homeToolbar code
+
+    editor.homeToolbar.setObjectName('homeToolbar')
+    editor.homeToolbar.setIconSize(QSize(18, 18))
+    editor.homeToolbar.setMovable(False)
+    editor.homeToolbar.setFixedHeight(40)
+    editor.addToolBar(Qt.ToolBarArea.TopToolBarArea, editor.homeToolbar)
 
     paste = build_action(editor.homeToolbar, './Assets/icons/svg_paste', "Paste", "Paste", False)
     paste.triggered.connect(editor.frameView.toolbar_paste)
@@ -292,7 +297,9 @@ def build_toolbar(editor):
     editor.homeToolbar.addSeparator()
 
     
+    # ---------------------------------------------------------------------------------
     # Classic Home Toolbar
+
     editor.classicToolbar = QToolBar()
     editor.classicToolbar.setObjectName('classicHomeToolbar')
     editor.classicToolbar.setIconSize(QSize(18,18))
@@ -303,8 +310,9 @@ def build_toolbar(editor):
 
 
     
+    # ---------------------------------------------------------------------------------
     # insertToolbar code 
-    editor.insertToolbar = QToolBar()
+
     editor.insertToolbar.setObjectName('insertToolbar')
     editor.insertToolbar.setIconSize(QSize(18,18))
     editor.insertToolbar.setFixedHeight(40)
@@ -360,8 +368,9 @@ def build_toolbar(editor):
 
     editor.insertToolbar.addWidget(dateTime)
     
+    # ---------------------------------------------------------------------------------
     # drawToolbar code
-    editor.drawToolbar = QToolBar()
+
     editor.drawToolbar.setObjectName('drawToolbar')
     editor.drawToolbar.setIconSize(QSize(18, 18))
     editor.drawToolbar.setFixedHeight(40)
@@ -384,6 +393,30 @@ def build_toolbar(editor):
     editor.drawToolbar.addSeparator()
 
     editor.drawToolbar.addAction(paperColor)
+
+    # ---------------------------------------------------------------------------------
+    # pluginToolbar code
+
+    editor.pluginToolbar.setObjectName('pluginToolbar')
+    editor.pluginToolbar.setIconSize(QSize(18,18))
+    editor.pluginToolbar.setFixedHeight(40)
+    editor.pluginToolbar.setMovable(False)
+    editor.pluginToolbar.setVisible(False)
+    editor.addToolBar(Qt.ToolBarArea.TopToolBarArea, editor.pluginToolbar)
+
+    add_widget = build_button(editor, './Assets/icons/svg_question', 'Add Custom Widget', 'Add Custom Widget', False)
+
+    editor.pluginToolbar.addWidget(add_widget)
+    # ---------------------------------------------------------------------------------
+
+    editor.tabbar.addTab(editor.fileToolbar, '&File')
+    editor.tabbar.addTab(editor.homeToolbar, '&Home')
+    editor.tabbar.addTab(editor.insertToolbar, '&Insert')
+    editor.tabbar.addTab(editor.drawToolbar, '&Draw')
+    editor.tabbar.addTab(editor.pluginToolbar, '&Plugins')
+
+    # Sets the first shown tab as the home tab
+    editor.tabbar.setCurrentIndex(1)
 
 def check_appearance():
     """Checks DARK/LIGHT mode of macos."""
