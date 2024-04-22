@@ -133,11 +133,12 @@ class TextboxWidget(QTextEdit):
             ChangedWidgetAttribute.BackgroundColor: lambda val: self.changeBackgroundColorEvent(val),
             ChangedWidgetAttribute.PaperColor: lambda val: self.paperColor(val), # not implemented yet
 
-            # Bullet list functions
-            ChangedWidgetAttribute.Bullet: lambda _: self.bullet_list("bulletReg"),
-            ChangedWidgetAttribute.Bullet_Num: lambda _: self.bullet_list("bulletNum"),
-            ChangedWidgetAttribute.BulletUA: lambda _: self.bullet_list("bulletUpperA"),
-            ChangedWidgetAttribute.BulletUR: lambda _: self.bullet_list("bulletUpperR"),
+            # Bullet list functions (for some reason applies to all textboxes. Refactored code for this portion was reverted back to draggablecontainer.py in the widgetAttributeChanged function)
+            #ChangedWidgetAttribute.Bullet: lambda _: self.bullet_list("bulletReg"),
+            #ChangedWidgetAttribute.Bullet_Num: lambda _: self.bullet_list("bulletNum"),
+            #ChangedWidgetAttribute.BulletUA: lambda _: self.bullet_list("bulletUpperA"),
+            #ChangedWidgetAttribute.BulletUR: lambda _: self.bullet_list("bulletUpperR"),
+            
 
             # Alignment functions
             ChangedWidgetAttribute.AlignLeft: lambda _: self.changeAlignmentEvent("alignLeft"),

@@ -56,6 +56,7 @@ class DraggableContainer(QWidget):
         if hasattr(self.childWidget, "newGeometryEvent"): self.newGeometry.connect(childWidget.newGeometryEvent)
         
         editorSignalsInstance.widgetAttributeChanged.connect(self.deselect_and_delete)
+        editorSignalsInstance.widgetAttributeChanged.connect(self.widgetAttributeChanged)
 
         
                 
@@ -422,6 +423,23 @@ class DraggableContainer(QWidget):
                     print("Removing empty container")
                     editorSignalsInstance.widgetRemoved.emit(self)
 
+    def widgetAttributeChanged(self, changedWidgetAttribute, value):
+        child_widget = self.childWidget
+        if self.hasFocus() or child_widget.hasFocus():
+            if hasattr(child_widget, "changeBulletEvent") and (changedWidgetAttribute == ChangedWidgetAttribute.Bullet):
+                print("Change Bullet Event Called")
+                child_widget.bullet_list("bulletReg")
+            elif hasattr(child_widget, "changeBulletEvent") and (changedWidgetAttribute == ChangedWidgetAttribute.Bullet_Num):
+                print("Change Bullet Event Called")
+                child_widget.bullet_list("bulletNum")
+            elif hasattr(child_widget, "changeBulletEvent") and (changedWidgetAttribute == ChangedWidgetAttribute.BulletUA):
+                print("Change Bullet Event Called")
+                child_widget.bullet_list("bulletUpperA")
+            elif hasattr(child_widget, "changeBulletEvent") and (changedWidgetAttribute == ChangedWidgetAttribute.BulletUR):
+                print("Change Bullet Event Called")
+                child_widget.bullet_list("bulletUpperR")
+
+
     def connectTableSignals(self, tableWidget):
         tableWidget.rowAdded.connect(self.resizeTable)
     def resizeTable(self):
@@ -429,7 +447,7 @@ class DraggableContainer(QWidget):
         self.newGeometry.emit(self.geometry())
         self.parentWidget().repaint()
 
-    def keyPressEvent(self, event: QKeyEvent) -> None:
+    def keyPressEvent(self, event: QKeyEvent) -> None: 
         if event.key() == Qt.Key_Shift:
             print("SHIFT PRESSED")
             self.shift_pressed = True
