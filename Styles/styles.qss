@@ -73,7 +73,7 @@ QPushButton#font_color {
 }
 
 QToolBar QToolButton::hover,
-QToolBar QPushButton#font_color::hover {
+QToolBar QPushButton::hover {
     background-color: #cecece;
 }
 

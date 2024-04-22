@@ -37,7 +37,8 @@ class Editor(QMainWindow):
         self.settings = QSettings("UNT - Team Olive", "OpenNote") #pre-saved settings needed for window state restoration
 
         build_ui(self)
-        action_names = self.save_toolbar_actions([self.homeToolbar, self.insertToolbar, self.drawToolbar])
+        
+        action_names = self.save_toolbar_actions([self.fileToolbar, self.homeToolbar, self.insertToolbar, self.drawToolbar, self.pluginToolbar])
         self.titlebar.set_action_names(action_names)
 
     def closeEvent(self, event):
