@@ -66,8 +66,26 @@ class Editor(QMainWindow):
             self.titlebar.window_state_changed(self.windowState())
         super().changeEvent(event)
         event.accept()
+        
+    def triggerUndo(self):
+        print("Item added to Stack")
+        # Get the currently focused widget
+        focused_widget = self.focusWidget()
+        print(f"Focused widget: {focused_widget}")
 
+        if focused_widget and isinstance(focused_widget, (QTextEdit, QLineEdit)):
+            print("Undo Action Completed")
+
+        
+            backspace_event = QKeyEvent(QEvent.KeyPress, Qt.Key_Backspace, Qt.NoModifier)
+            backspace_release_event = QKeyEvent(QEvent.KeyRelease, Qt.Key_Backspace, Qt.NoModifier)
+
+            # Post the key press event to the focused widget
+            QApplication.postEvent(focused_widget, backspace_event)
+            QApplication.postEvent(focused_widget, backspace_release_event)
+            
     # mousePress, mouseMove, and mouseRelease handle mouse move events inside the window
+    
     def mousePressEvent(self, event):
         if event.button() == Qt.LeftButton:
             self.moveFlag = True
