@@ -33,6 +33,7 @@ class Editor(QMainWindow):
 
         self.autosaver = Autosaver(self) # Waits for change signals and saves the notebook
         self.setFocus()
+        self.undoStack = []
 
         self.settings = QSettings("UNT - Team Olive", "OpenNote") #pre-saved settings needed for window state restoration
 
@@ -68,21 +69,40 @@ class Editor(QMainWindow):
         event.accept()
         
     def triggerUndo(self):
-        print("Item added to Stack")
-        # Get the currently focused widget
+        print("Item added to Undo Stack")
         focused_widget = self.focusWidget()
-        print(f"Focused widget: {focused_widget}")
+       
 
         if focused_widget and isinstance(focused_widget, (QTextEdit, QLineEdit)):
-            print("Undo Action Completed")
+            cursor = focused_widget.textCursor()  # Get the cursor of the widget
+            if cursor.position() > 0:  # Check if there's a character to delete
+                cursor.movePosition(QTextCursor.Left, QTextCursor.KeepAnchor)  # Select character to the left
+                char_to_delete = cursor.selectedText()  # Get the selected text
+                self.undoStack.append(char_to_delete)  # Append it to the stack
+                print(f"Stored '{char_to_delete}' in redo stack")
 
-        
+            
             backspace_event = QKeyEvent(QEvent.KeyPress, Qt.Key_Backspace, Qt.NoModifier)
             backspace_release_event = QKeyEvent(QEvent.KeyRelease, Qt.Key_Backspace, Qt.NoModifier)
 
-            # Post the key press event to the focused widget
             QApplication.postEvent(focused_widget, backspace_event)
             QApplication.postEvent(focused_widget, backspace_release_event)
+
+    def triggerRedo(self):
+        if not self.undoStack:
+            print("No characters to redo")
+            return
+        
+        char_to_redo = self.undoStack.pop()  # Get the last character from the stack
+        focused_widget = self.focusWidget()
+        
+        if focused_widget and isinstance(focused_widget, (QTextEdit, QLineEdit)):
+            redo_event = QKeyEvent(QEvent.KeyPress, 0, Qt.NoModifier, text=char_to_redo)
+            QApplication.postEvent(focused_widget, redo_event)
+            print(f"Redo action: Typed '{char_to_redo}'")
+            print(f"Item Removed from stack")
+        else:
+            print("Focused widget is not a QTextEdit or QLineEdit")
             
     # mousePress, mouseMove, and mouseRelease handle mouse move events inside the window
     
