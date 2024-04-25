@@ -378,11 +378,9 @@ def build_tabbar(editor):
     editor.drawToolbar.setVisible(False)
     editor.addToolBar(Qt.ToolBarArea.TopToolBarArea, editor.drawToolbar)
     
-    undo = build_action(editor.drawToolbar, './Assets/icons/svg_undo', "Undo", "Undo", False)
     undo_action = QAction(QIcon('./Assets/icons/undo.png'), '&Undo', editor)
     undo.triggered.connect(editor.triggerUndo)
     
-    redo = build_action(editor.drawToolbar, './Assets/icons/svg_redo', "Redo", "Redo", False)
     redo_action = QAction(QIcon('./Assets/icons/redo.png'), '&Redo', editor)
     redo.triggered.connect(editor.triggerRedo)
     # redo.triggered.connect(editor.frameView.triggerRedo)
