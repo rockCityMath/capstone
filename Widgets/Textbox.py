@@ -78,12 +78,12 @@ class TextboxWidget(QTextBrowser):
             documentSize = document.size().toSize()
             documentHeight = documentSize.height()
             parent_widget = self.parentWidget()
-            newWidth = parent_widget.width()
-            print(newWidth)
+            if (parent_widget is not None):
+                newWidth = parent_widget.width()
             # the document height is the text height. This is to expand the widget size to match document height
-            if(height < documentHeight):
-                height = documentHeight
-                self.resize(newWidth, height)
+                if(height < documentHeight):
+                    height = documentHeight
+                    self.resize(newWidth, height)
     
     def focusOutEvent(self, event):
         super().focusOutEvent(event)
