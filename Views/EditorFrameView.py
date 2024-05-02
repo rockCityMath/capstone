@@ -25,6 +25,9 @@ import subprocess
 class EditorFrameView(QWidget):
     SETTINGS_KEY = "BackgroundColor" # Key for saving the background color setting
 
+    # used for storing last mouse click and setting the location of generated images, textboxes, and tables at the last location
+    lastClickPos = QPoint()
+
     def __init__(self, editor):
         super(EditorFrameView, self).__init__()
 
@@ -199,6 +202,8 @@ class EditorFrameView(QWidget):
         print("EDITORFRAME MOUSEPRESS")
         editor = self.editor
 
+        EditorFrameView.lastClickPos = event.pos()
+
         #calls textwidget's clearSelectionSignal
         if event.button() == Qt.LeftButton:
             if self.rect().contains(event.pos()):
@@ -272,71 +277,74 @@ class EditorFrameView(QWidget):
         textboxWidget = TextboxWidget.new(clickPos)
         textboxWidget.insertPlainText(current_date) 
         dc = DraggableContainer(textboxWidget, self)
+        dc.resize(80,25)
         dc.show()
         self.undoHandler.pushCreate(dc)
         editorSignalsInstance.widgetAdded.emit(dc)
         editorSignalsInstance.changeMade.emit()
+
 
     def insertTime(self, clickPos):
         current_time = QDateTime.currentDateTime().toString("h:mm AP")
         textboxWidget = TextboxWidget.new(clickPos)
         textboxWidget.insertPlainText(current_time)
         dc = DraggableContainer(textboxWidget, self)
+        dc.resize(80,25)
         dc.show()
         self.undoHandler.pushCreate(dc)
         editorSignalsInstance.widgetAdded.emit(dc)
         editorSignalsInstance.changeMade.emit()
 
-    def center_of_screen(self):
-        editor_frame_geometry = self.editorFrame.geometry()
-        print(f"editor_frame_geometry.width() is {editor_frame_geometry.width()}")
-        print(f"editor_frame_geometry.height() is {editor_frame_geometry.height()}")
-        center_x = (editor_frame_geometry.width() - 200) // 2 
-        center_y = (editor_frame_geometry.height() - 200) // 2 
-        return center_x, center_y
+    # will generate images, tables, and textboxes at last mouse press location. If no mouse press location, default to top right of the screen.
+    def createAtLastPos(self, widgetClass):
+        # no mouse press registered
+        if EditorFrameView.lastClickPos == QPoint(0, 0):
+            print("lastClickPos is (0, 0)")
+            center_x, center_y = self.getCenterOfEditorFrame()
+            self.newWidgetOnSection(widgetClass, QPoint(center_x, center_y))
+        print(EditorFrameView.lastClickPos)
+        self.newWidgetOnSection(widgetClass, EditorFrameView.lastClickPos)
 
+    def getCenterOfEditorFrame(self):
+        if self.editorFrame is None:
+            # If editor frame is not initialized, return default position
+            return 100, 100  # Default position
+
+        editor_frame_geometry = self.editorFrame.geometry()
+        center_x = (editor_frame_geometry.width() - 800) // 2
+        center_y = (editor_frame_geometry.height() - 800) // 2
+        return center_x, center_y
+    
     # Used for calling functions in toolbar
     def toolbar_paste(self):
         print("toolbar_paste pressed")
-        center_x, center_y = self.center_of_screen()
-        clickPos = QPoint(center_x, center_y)
-        self.pasteWidget(clickPos)
+        self.pasteWidget(EditorFrameView.lastClickPos)
 
     def toolbar_table(self):
         print("toolbar_table pressed")
-        center_x, center_y = self.center_of_screen()
-        clickPos = QPoint(center_x, center_y)
-        self.newWidgetOnSection(TableWidget, clickPos)
         
+        # bug: table widget if using createAtLastPos will go through the if statement to spawn in the center if qpoint == (0, 0) but fail to be created
+        # self.createAtLastPos(TableWidget)
+        self.newWidgetOnSection(TableWidget, EditorFrameView.lastClickPos)
     def toolbar_snipScreen(self):
         print("toolbar_snipScreen pressed")
-        center_x, center_y = self.center_of_screen()
-        clickPos = QPoint(center_x, center_y)
-        self.snipScreen(clickPos)
+        self.snipScreen(EditorFrameView.lastClickPos)
         
     def toolbar_pictures(self):
         print("toolbar_pictures pressed")
-        center_x, center_y = self.center_of_screen()
-        clickPos = QPoint(center_x, center_y)
-        self.newWidgetOnSection(ImageWidget, clickPos)
+        self.createAtLastPos(ImageWidget)
         
     def toolbar_hyperlink(self):
         print("toolbar_hyperlink pressed")
-        center_x, center_y = self.center_of_screen()
-        clickPos = QPoint(center_x, center_y)
-        self.insertLink(clickPos)
+        self.insertLink(EditorFrameView.lastClickPos)
 
     def toolbar_date(self):
         print("toolbar_date pressed")
-        center_x, center_y = self.center_of_screen()
-        clickPos = QPoint(center_x, center_y)
-        self.insertDate(clickPos)
+        self.insertDate(EditorFrameView.lastClickPos)
 
     def toolbar_time(self):
         print("toolbar_time pressed")
-        center_x, center_y = self.center_of_screen()
-        clickPos = QPoint(center_x, center_y)
-        self.insertTime(clickPos)
+        self.insertTime(EditorFrameView.lastClickPos)
 
     def addCustomWidget(self, e):
         def getCustomWidgets():

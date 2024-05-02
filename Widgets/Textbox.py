@@ -2,13 +2,14 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 from Modules.EditorSignals import editorSignalsInstance, ChangedWidgetAttribute, CheckSignal
-
+from PySide6.QtGui import QDesktopServices # handle opening urls
+from urllib.parse import urlparse # check url for https
 import subprocess
 
 FONT_SIZES = [7, 8, 9, 10, 11, 12, 13, 14, 18, 24, 36, 48, 64, 72, 96, 144, 288]
 
 
-class TextboxWidget(QTextEdit):
+class TextboxWidget(QTextBrowser):
     def __init__(self, x, y, w=15, h=30, t=""):
         super().__init__()
 
@@ -21,7 +22,7 @@ class TextboxWidget(QTextEdit):
         
         self.setGeometry(x, y, w, h)  # This sets geometry of DraggableObject
         self.setText(t)
-
+        self.installEventFilter(self)
         # self.setStyleSheet("background-color: rgba(0, 0, 0, 0); selection-background-color: #FFFFFF;")
 
         self.setHorizontalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
@@ -42,9 +43,10 @@ class TextboxWidget(QTextEdit):
             self.setTextColor("black")
             self.changeAllTextColors("black")
 
+        # indicate widget can be interacted with as a text editor and a text browser
         self.setTextInteractionFlags(Qt.TextEditorInteraction | Qt.TextBrowserInteraction)
 
-        self.installEventFilter(self)
+        
 
     def eventFilter(self, obj, event):
         if event.type() == QEvent.KeyPress and event.key() == Qt.Key_Tab:
@@ -75,16 +77,16 @@ class TextboxWidget(QTextEdit):
             document = self.document()
             documentSize = document.size().toSize()
             documentHeight = documentSize.height()
+            parent_widget = self.parentWidget()
+            newWidth = parent_widget.width()
+            print(newWidth)
             # the document height is the text height. This is to expand the widget size to match document height
             if(height < documentHeight):
                 height = documentHeight
-                self.resize(width, height)
+                self.resize(newWidth, height)
+    
     def focusOutEvent(self, event):
         super().focusOutEvent(event)
-        
-
-
-    
 
     @staticmethod
     def new(clickPos: QPoint):
@@ -109,7 +111,8 @@ class TextboxWidget(QTextEdit):
         self.setStyleSheet(data["stylesheet"])
 
     def checkEmpty(self):
-        if len(self.toPlainText()) < 1:
+        text = self.toPlainText()
+        if len(text.strip()) == 0:  # Check if text has only spaces and newlines
             return True
         return False
     
@@ -130,8 +133,8 @@ class TextboxWidget(QTextEdit):
             ChangedWidgetAttribute.TextHighlightColor: lambda val: self.changeTextHighlightColorEvent(val),
 
             # background color functions
-            ChangedWidgetAttribute.BackgroundColor: lambda val: self.changeBackgroundColorEvent(val),
-            ChangedWidgetAttribute.PaperColor: lambda val: self.paperColor(val), # not implemented yet
+            # ChangedWidgetAttribute.BackgroundColor: lambda val: self.changeBackgroundColorEvent(val),
+            # ChangedWidgetAttribute.PaperColor: lambda val: self.paperColor(val), # not implemented yet
 
             # Bullet list functions (for some reason applies to all textboxes. Refactored code for this portion was reverted back to draggablecontainer.py in the widgetAttributeChanged function)
             #ChangedWidgetAttribute.Bullet: lambda _: self.bullet_list("bulletReg"),
@@ -141,12 +144,12 @@ class TextboxWidget(QTextEdit):
             
 
             # Alignment functions
-            ChangedWidgetAttribute.AlignLeft: lambda _: self.changeAlignmentEvent("alignLeft"),
-            ChangedWidgetAttribute.AlignCenter: lambda _: self.changeAlignmentEvent("alignCenter"),
-            ChangedWidgetAttribute.AlignRight: lambda _: self.changeAlignmentEvent("alignRight")
+            # ChangedWidgetAttribute.AlignLeft: lambda _: self.changeAlignmentEvent("alignLeft"),
+            # ChangedWidgetAttribute.AlignCenter: lambda _: self.changeAlignmentEvent("alignCenter"),
+            # ChangedWidgetAttribute.AlignRight: lambda _: self.changeAlignmentEvent("alignRight")
         }
         # if current widget is in focus
-        if (self.hasFocus or self.parentWidget().hasFocus) and changedWidgetAttribute in attribute_functions:
+        if self.hasFocus and changedWidgetAttribute in attribute_functions:
         #if self.hasFocus() and changedWidgetAttribute in attribute_functions:
             print(f"{changedWidgetAttribute} {value}")
             # Calls the function in the dictionary
@@ -530,17 +533,45 @@ class TextboxWidget(QTextEdit):
                     cursor.movePosition(QTextCursor.StartOfBlock)
             self.setTextCursor(cursor)
 
+        # bug: if at the end of the textbox, it will not jump to the next line but continue to tab outside of view.
+        # make 4 spaces if there is no bullet
         else:
-            cursor.insertText("    ")
+            cursor.insertText(" ")
+            cursor.insertText(" ")
+            cursor.insertText(" ")
+            cursor.insertText(" ")
             self.setTextCursor(cursor)
             pass
+    
+    # used for handling space bar if it reaches the end of the row. Also is made to fix handleTabKey when tab is pressed with no bullet point
+    '''def keyPressEvent(self, event):
+        if event.key() == Qt.Key_Space:
+            cursor = self.textCursor()
+            block = cursor.block()
+            block_text = block.text()
+            cursor_position = cursor.positionInBlock()
 
+            if cursor_position == len(block_text.strip()):
+                # If cursor is at the end of the block, insert a newline
+                cursor.insertBlock()
+            else:
+                # If cursor is not at the end, insert a space
+                super().keyPressEvent(event)
+        else:
+            super().keyPressEvent(event)'''
+
+    # Used for inserting hyperlinks into textboxes
     def insertTextLink(self, link_address, display_text):
+
         self.setOpenExternalLinks(True)
+        # Ensure link is prefixed with a protocol (e.g., 'http://', 'https://')
+        if not urlparse(link_address).scheme:
+            link_address = 'http://' + link_address
         link_html = f'<a href="{link_address}">{display_text}</a>'
         cursor = self.textCursor()
         cursor.insertHtml(link_html)
         QDesktopServices.openUrl(link_html)
+        self.resize(150,50)
 
     def changeFontSizeEvent(self, value):
         # todo: when textbox is in focus, font size on toolbar should match the font size of the text
@@ -584,7 +615,7 @@ class TextboxWidget(QTextEdit):
         
         if color.isValid():
             rgb = color.getRgb()
-            self.setStyleSheet(f"QTextEdit {{background-color: rgb({rgb[0]}, {rgb[1]}, {rgb[2]}); }}")
+            self.setStyleSheet(f"QTextBrowser {{background-color: rgb({rgb[0]}, {rgb[1]}, {rgb[2]}); }}")
 
         self.deselectText()
 
@@ -643,29 +674,6 @@ class TextboxWidget(QTextEdit):
         #cursor.movePosition(QTextCursor.End)
         self.setTextCursor(cursor)
         #self.setFocus()
-
-
-
-    def refactorTest(self):
-        cursor = self.textCursor()
-        current_format = cursor.charFormat()
-
-        # Checks if currently selected text is bold
-        is_bold = current_format.fontWeight() == 700
-
-        # toggles the italics
-        if is_bold:
-            current_format.setFontWeight(500)
-        else:
-            current_format.setFontWeight(700)
-        # Apply modified format to selected text
-        cursor.setCharFormat(current_format)
-        cursor.mergeCharFormat(format)
-        # Emit signal if no text is bold to toggle bold off
-        if not is_bold:
-            editorSignalsInstance.widgetAttributeChanged.emit(ChangedWidgetAttribute.FontBold, None)
-        # Update text cursor with modified format
-        self.setTextCursor(cursor)
 
     def selectAllText(self):
         print("Select All Text function from textwidget called")

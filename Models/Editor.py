@@ -19,7 +19,7 @@ from Modules.Titlebar import Build_titlebar
 class Editor(QMainWindow):
     def __init__(self):
         super().__init__()
-        self.setWindowFlags(Qt.WindowType.FramelessWindowHint) 
+        # self.setWindowFlags(Qt.WindowType.FramelessWindowHint) 
         # self.setWindowFlags(Qt.WindowType.Window | Qt.WindowType.CustomizeWindowHint) # This changes the window back to a state that allows resizing
         self.notebook = NotebookModel('Untitled Notebook')    # Current notebook object
         # self.selected = None                                  # Selected object (for font attributes of TextBox)

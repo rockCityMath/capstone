@@ -125,7 +125,3 @@ class TablePopupWindow(QDialog):
     def create_table(self):
         print("table")
 
-    def mousePressEvent(self, event):
-        # Check if the mouse click is outside the dialog
-        if event.button() == Qt.LeftButton and not self.rect().contains(event.globalPos()):
-            self.close()
