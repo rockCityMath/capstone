@@ -58,20 +58,25 @@ class ImageWidget(QLabel):
         return image
     '''
     # uses inbuilt qt file dialog 
-    @staticmethod
     def new(clickPos):
-
-        
         # Create a dummy parent widget for the file dialog
         dummy_parent = QWidget()
 
         # Get path from user
         options = QFileDialog.Options()
         options |= QFileDialog.DontUseNativeDialog  # Use Qt's built-in dialog instead of the native platform dialog
-        path, _ = QFileDialog.getOpenFileName(dummy_parent, 'Add Image', '', 'Images (*.png *.xpm *.jpg *.bmp *.jpeg);;All Files (*)', options=options)
-        
-        # Check if the user selected a file
-        if path:
+
+        # Create file dialog
+        file_dialog = QFileDialog(dummy_parent, 'Add Image', '', 'Images (*.png *.xpm *.jpg *.bmp *.jpeg);;All Files (*)', options=options)
+
+        # Set the window flags to keep the dialog on top
+        file_dialog.setWindowFlags(file_dialog.windowFlags() | Qt.WindowStaysOnTopHint)
+
+        # Show the file dialog
+        if file_dialog.exec():
+            # Get the selected file path
+            path = file_dialog.selectedFiles()[0]
+
             # Get image size
             image_matrix = cv2.imread(path)
             h, w, _ = image_matrix.shape
@@ -80,7 +85,7 @@ class ImageWidget(QLabel):
             image = ImageWidget(clickPos.x(), clickPos.y(), w, h, image_matrix)
             return image
 
-        # Return None or handle the case where the user cancels the dialog
+        # Return None if the user cancels the dialog
         return None
 
 

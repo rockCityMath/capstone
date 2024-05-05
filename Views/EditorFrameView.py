@@ -302,8 +302,10 @@ class EditorFrameView(QWidget):
             print("lastClickPos is (0, 0)")
             center_x, center_y = self.getCenterOfEditorFrame()
             self.newWidgetOnSection(widgetClass, QPoint(center_x, center_y))
-        print(EditorFrameView.lastClickPos)
-        self.newWidgetOnSection(widgetClass, EditorFrameView.lastClickPos)
+            return
+        else:
+            self.newWidgetOnSection(widgetClass, EditorFrameView.lastClickPos)
+            return
 
     def getCenterOfEditorFrame(self):
         if self.editorFrame is None:
@@ -311,8 +313,8 @@ class EditorFrameView(QWidget):
             return 100, 100  # Default position
 
         editor_frame_geometry = self.editorFrame.geometry()
-        center_x = (editor_frame_geometry.width() - 800) // 2
-        center_y = (editor_frame_geometry.height() - 800) // 2
+        center_x = (editor_frame_geometry.width() - 400) // 2
+        center_y = (editor_frame_geometry.height() - 400) // 2
         return center_x, center_y
     
     # Used for calling functions in toolbar
@@ -324,8 +326,8 @@ class EditorFrameView(QWidget):
         print("toolbar_table pressed")
         
         # bug: table widget if using createAtLastPos will go through the if statement to spawn in the center if qpoint == (0, 0) but fail to be created
-        # self.createAtLastPos(TableWidget)
-        self.newWidgetOnSection(TableWidget, EditorFrameView.lastClickPos)
+        self.createAtLastPos(TableWidget)
+        # self.newWidgetOnSection(TableWidget, EditorFrameView.lastClickPos)
     def toolbar_snipScreen(self):
         print("toolbar_snipScreen pressed")
         self.snipScreen(EditorFrameView.lastClickPos)
