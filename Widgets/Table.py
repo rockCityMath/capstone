@@ -8,7 +8,8 @@ class TableWidget(QWidget):
 
         # The actual table widget
         self.table = QTableWidget(rows, cols, self)
-        # Hide the horizontal and vertical headers
+        # Hides the horizontal and vertical headers
+        # These actually look really cool tho
         self.table.horizontalHeader().setVisible(False)
         self.table.verticalHeader().setVisible(False)
 
@@ -42,17 +43,14 @@ class TableWidget(QWidget):
 
     @staticmethod
     def new(clickPos: QPoint):
-        return TableWidget(clickPos.x(), clickPos.y(), 200, 200, 2, 2)
-
-    def customMenuItems(self):
-        addRow = QAction("Add Row", self)
-        addRow.triggered.connect(self.addRow)
-
-        addCol = QAction("Add Column", self)
-        addCol.triggered.connect(self.addCol)
-
-        return [addRow, addCol]
-
+        dialog = TablePopupWindow()
+        if dialog.exec_() == QDialog.Accepted:
+            rows_input, cols_input = dialog.get_table_data()
+            print(f"rows input is {rows_input} cols_input is {cols_input}")
+            table_widget = TableWidget(clickPos.x(), clickPos.y(), 200, 200, int(rows_input), int(cols_input))
+            
+        return table_widget
+    
     def __getstate__(self):
         state = {}
 
@@ -79,3 +77,55 @@ class TableWidget(QWidget):
         for i in range(colCnt):
             for j in range(rowCnt):
                 self.table.setItem(j, i, QTableWidgetItem(state['tableData'][i][j]))
+
+def show_table_popup(self):
+    popup = TablePopupWindow()
+    popup.exec_() 
+    #def undo_triggered(self):
+    # Call the EditorFrameView's triggerUndo method
+    #self.EditorFrameView.triggerUndo()
+
+class TablePopupWindow(QDialog):
+    def __init__(self):
+        super().__init__()
+
+        # to stay on top of application
+        self.setWindowFlag(Qt.WindowStaysOnTopHint)
+        
+        self.setWindowTitle("Table Configuration")
+        self.layout = QVBoxLayout()
+
+        self.rows_input = QLineEdit(self)
+        self.rows_input.setPlaceholderText("Enter number of rows:")
+        self.layout.addWidget(self.rows_input)
+
+        self.cols_input = QLineEdit(self)
+        colNum = self.cols_input.setPlaceholderText("Enter number of columns:")
+        self.layout.addWidget(self.cols_input)
+
+        create_table_button = QPushButton("Create Table")
+        self.layout.addWidget(create_table_button)
+        create_table_button.clicked.connect(self.accept)
+        #create error message if no data is entered or if number of rows or columns are < 1
+        
+        cancel_button = QPushButton("Cancel")
+        self.layout.addWidget(cancel_button)
+        cancel_button.clicked.connect(self.reject)
+        
+
+        self.setLayout(self.layout)
+
+        self.setModal(False)
+    
+    def get_table_data(self):
+        rows_input = self.rows_input.text()
+        cols_input = self.cols_input.text()
+        return rows_input, cols_input
+
+    def create_table(self):
+        print("table")
+
+    def mousePressEvent(self, event):
+        # Check if the mouse click is outside the dialog
+        if event.button() == Qt.LeftButton and not self.rect().contains(event.globalPos()):
+            self.close()

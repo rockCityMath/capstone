@@ -4,6 +4,8 @@ from PySide6.QtWidgets import *
 from Modules.EditorSignals import editorSignalsInstance
 import os
 
+
+#current version of undo does not work. When using ctrl+z in textboxes, it uses the QTextEdit default settings for ctrl+z(undo) and ctrl+y(redo) to make it appear as if undo does work
 class UndoActionCreate:
     def __init__(self, draggableContainer):
         self.draggableContainer = draggableContainer

@@ -2,12 +2,50 @@
     border: none;
     padding: 0;
     margin: 0;
-    font-family: "Segoe UI";
-    font-size: 16pt;
+    font-family: "calibri", sans-serif;
+    font-size: 12pt;
+}
+
+QMainWindow {
+    background-color: rgb(230, 229, 235);
 }
 
 QMenuBar {
-    background-color: rgb(169, 101, 255);
+    background-color: rgb(230, 229, 235);
+    padding: 5px 10px;
+    color: rgb(0, 0, 0);
+}
+
+QWidget#titlebar {
+    background-color: rgb(119, 25, 170);
+}
+
+QWidget#titlebar QToolButton,
+QWidget#titlebar QWidget,
+QWidget#searchbarWidget {
+    background-color: rgb(119, 25, 170);
+}
+
+QWidget#searchbarWidget QLineEdit {
+    border-radius: 3px; 
+    background-color: rgb(225,209,235); 
+    color: rgb(119, 25, 170); 
+    height: 60px;
+}
+
+QWidget#searchbarWidget QLineEdit::hover,
+QWidget#searchbarWidget QLineEdit::focus {
+    background-color: white; 
+}
+
+QToolButton#tray::hover,
+QToolButton#windowed::hover,
+QToolButton#fullscreen::hover {
+    background-color: rgb(108, 23, 154);
+}
+
+QToolButton#close::hover {
+    background-color: rgb(232, 17, 35);
 }
 
 QMenuBar::item:selected {
@@ -15,7 +53,9 @@ QMenuBar::item:selected {
 }
 
 QToolBar {
-    margin: 10px, 10px, 0, 0;
+    border-radius: 8px;
+    spacing: 10px;
+    background-color: white;
 }
 
 QComboBox {
@@ -32,7 +72,8 @@ QPushButton#font_color {
     height: 20px;
 }
 
-QToolButton::hover, QPushButton#font_color::hover {
+QToolBar QToolButton::hover,
+QToolBar QPushButton::hover {
     background-color: #cecece;
 }
 
@@ -40,27 +81,40 @@ QToolButton::checked {
     background-color: #b1b1b1;
 }
 
-QToolButton::checked::hover {
+QToolBar QToolButton::checked::hover {
     background-color: #9b9b9b;
 }
 
 QTreeView {
-    background-color: #c2c2c2;
+    background-color: rgb(230, 229, 235);
 }
 
 QPushButton {
-    padding: 5px, 5px, 0, 0;
+    padding: 5px 0;
 }
 
 QLabel#notebook_title {
-    padding: 5px, 5px, 0, 0;
+    padding: 5px;
     text-align: center;
     background-color: #d9d9d9;
 }
 
+QLabel#notebook_title::hover {
+    padding: 5px;
+    text-align: center;
+    border-radius: 3px;
+    background-color: white;
+}
+
 QLabel#pages_title {
-    padding: 5px, 5px, 5px, 0;
+    padding: 5px;
     background-color: #c2c2c2;
+}
+
+QLabel#pages_title::hover {
+    padding: 5px;
+    border-radius: 3px;
+    background-color: white;
 }
 
 QPushButton#addPage {
@@ -69,5 +123,10 @@ QPushButton#addPage {
 }
 
 QPushButton#addPage::hover {
-    background-color: #cecece;
+    background-color: red;
+}
+
+QTextEdit {
+    selection-background-color: #F0F0F0;
+    selection-color: #000000
 }

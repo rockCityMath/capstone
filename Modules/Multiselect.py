@@ -5,6 +5,7 @@ from PySide6.QtCore import *
 from PySide6.QtGui import *
 from PySide6.QtWidgets import *
 from Models.DraggableContainer import DraggableContainer
+from Modules.EditorSignals import editorSignalsInstance,ChangedWidgetAttribute
 
 class MultiselectMode(Enum):
     NONE = 0,
@@ -25,6 +26,24 @@ class Multiselector(QObject):
         self.selectedObjects = []                  # All objects in the user's selected area
         self.dragInitEventPos = None               # Position of the event that started the dragging
         self.dragOffset = None                     # Offset of object that is used to drag the others from the first object in the editors list
+
+
+        # for handling deselect
+        self.installEventFilter()
+        # Connect signal for widget removal
+        editorSignalsInstance.widgetRemoved.connect(self.removeWidgetFromList)
+        
+        editorSignalsInstance.widgetCut.connect(self.cutWidgetEvent)
+
+    # Slot to remove widget from object list
+    @Slot(QWidget)
+    def removeWidgetFromList(self, widget):
+        if widget in self.selectedObjects:
+            self.selectedObjects.remove(widget)
+            
+    # install event filter to editorframe
+    def installEventFilter(self):
+        self.editorFrame.installEventFilter(self)
 
     def eventFilter(self, obj, event):
 
@@ -55,7 +74,30 @@ class Multiselector(QObject):
                 multiselector.focusObjectIfInMultiselect()
 
             return False
+        
+        # Handle click outside the selected objects to deselect
+        if event.type() == QEvent.MouseButtonPress and event.button() == Qt.LeftButton:
+            if multiselector.mode == MultiselectMode.HAS_SELECTED_OBJECTS:
+                multiselector.deselectIfClickOutsideObjects(event)
+                print("DESELECT from multiselect")
+
         return False
+
+    # check if clicked outside
+    def deselectIfClickOutsideObjects(self, event):
+        # Check if the click is outside any selected objects
+        clickPos = event.globalPos()
+        for o in self.selectedObjects:
+            o_tl_pos = o.mapToGlobal(QPoint(0, 0))
+            o_br_pos = o_tl_pos + QPoint(o.width(), o.height())
+
+            if o_tl_pos.x() <= clickPos.x() <= o_br_pos.x() and o_tl_pos.y() <= clickPos.y() <= o_br_pos.y():
+                # Click is inside a selected object, do not deselect'
+                print("Click is inside a selected object, do not deselect")
+                return
+
+        # Click is outside all selected objects, deselect
+        self.finishDraggingObjects()
 
     def beginDrawingArea(self, event):
         self.mode = MultiselectMode.IS_DRAWING_AREA
@@ -66,38 +108,43 @@ class Multiselector(QObject):
         self.drawAreaStartGlobalPos = event.globalPos()
 
     def continueDrawingArea(self, event):
-        width = event.pos().x() - self.drawAreaStartLocalPos.x()
-        height = event.pos().y() - self.drawAreaStartLocalPos.y()
+        start_x = self.drawAreaStartLocalPos.x()
+        start_y = self.drawAreaStartLocalPos.y()
 
-        self.drawingWidget.resize(width, height)
+        end_x = event.pos().x()
+        end_y = event.pos().y()
 
+        width = abs(end_x - start_x)
+        height = abs(end_y - start_y)
+
+        # Calculate the x and y for setting the geometry
+        x = min(start_x, end_x)
+        y = min(start_y, end_y)
+
+        # Adjust the geometry of the drawingWidget
+        self.drawingWidget.setGeometry(x, y, width, height)
     def finishDrawingArea(self, event):
         editor = self.editorFrame.editor
 
-        # Throw away if the area of the selection is negative (user dragged from bottom right to top left)
-        if self.drawAreaStartGlobalPos.x() > event.globalPos().x() or self.drawAreaStartGlobalPos.y() > event.globalPos().y():
-            self.drawingWidget.hide()
-            self.finishDraggingObjects()
-            # You could probably switch around the coordinates in here and modify drawing logic to support other drag directions
-            return
+        # Get the coordinates of the top-left corner of the selection area
+        start_x = min(self.drawAreaStartGlobalPos.x(), event.globalPos().x())
+        start_y = min(self.drawAreaStartGlobalPos.y(), event.globalPos().y())
 
-        # Get all DraggableContainers in the selection
+        # Get the coordinates of the bottom-right corner of the selection area
+        end_x = max(self.drawAreaStartGlobalPos.x(), event.globalPos().x())
+        end_y = max(self.drawAreaStartGlobalPos.y(), event.globalPos().y())
+
+        # Iterate through objects and check if they are inside the selection area
         sectionView = self.editorFrame.editor.sectionView
         currentSectionIndex = sectionView.tabs.currentIndex()
         currentSectionModel = sectionView.sectionModels[currentSectionIndex]
         currentSectionModelWidgets = currentSectionModel.widgets
+
         for o in currentSectionModelWidgets:
-            print(o)
+            ob_tl_pos = o.mapToGlobal(QPoint(0, 0))
 
-            # Map all positions to global for correct coord checks
-            ob_tl_pos = o.mapToGlobal(QPoint(0, 0)) # Object top left corner
-            start_pos = self.drawAreaStartGlobalPos
-            end_pos = event.globalPos()
-
-            # If object x + width is between start and end x, and object y + height is between start and end y
-            if ob_tl_pos.x() > start_pos.x() and ob_tl_pos.x() + o.width() < end_pos.x():
-                if ob_tl_pos.y() > start_pos.y() and ob_tl_pos.y() + o.height() < end_pos.y():
-                    self.selectedObjects.append(o)
+            if start_x <= ob_tl_pos.x() <= end_x and start_y <= ob_tl_pos.y() <= end_y:
+                self.selectedObjects.append(o)
 
         if len(self.selectedObjects) > 0:
             self.mode = MultiselectMode.HAS_SELECTED_OBJECTS
@@ -106,6 +153,13 @@ class Multiselector(QObject):
 
         print("SELECTION COUNT: ", len(self.selectedObjects))
 
+        # highlight all text for textwidgets
+        for o in self.selectedObjects:
+            # Checks if child is textwidget
+            if (isinstance(o.childWidget, QTextEdit)):
+                print("TEXT WIDGET FOUND. HIGHLIGHTING")
+                # Call function in textwidget to highlight all text in their textbox
+                o.childWidget.selectAllText()
         # Hide selection area
         self.drawingWidget.hide()
 
@@ -120,7 +174,7 @@ class Multiselector(QObject):
 
         # Get the position that each object would move to
         objectPositions = []
-        for o in reversed(self.selectedObjects): # fuck it, reversed
+        for o in reversed(self.selectedObjects): # fuck it, reversed 
 
             # You have to know this, focus
             # Position of the first (in the reversed array) object's top left corner + the offset of the click inside the selected object - the position of the object to move
@@ -179,3 +233,15 @@ class Multiselector(QObject):
                 o.setStyleSheet(TextBoxStyles.INFOCUS.value)
         except:
             self.finishDraggingObjects()
+    # Allow removing all selected objects
+    def removeWidgetEvent(self):
+        for obj in self.selectedObjects:
+            editorSignalsInstance.changeMade.emit(obj)
+    
+    # Allow cutting all selected objects
+    def cutWidgetEvent(self):
+        for obj in self.selectedObjects:
+            editorSignalsInstance.widgetCopied.emit(obj)
+            editorSignalsInstance.widgetRemoved.emit(obj)
+
+    # Paste works from clipboard, meaning have to store all objects to clipboard

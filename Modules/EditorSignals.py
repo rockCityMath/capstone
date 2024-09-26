@@ -3,6 +3,8 @@ from PySide6.QtGui import *
 from enum import Enum
 
 class ChangedWidgetAttribute(Enum):
+    # Used for unique signals
+    # Add variable to create a unique signal 
     BackgroundColor = 0
     FontColor = 1
     Font = 2
@@ -10,7 +12,23 @@ class ChangedWidgetAttribute(Enum):
     FontBold = 4
     FontItalic = 5
     FontUnderline = 6
+    TextHighlightColor = 7
+    Bullet = 8
+    Bullet_Num = 9
+    LoseFocus = 10
 
+    BulletUR = 11
+    BulletUA = 12
+    AlignLeft = 13
+    AlignCenter = 14
+    AlignRight = 15
+    PaperColor = 16
+
+    Strikethrough = 17
+    Refactor = 18
+
+class CheckSignal(Enum):
+    BoldCheck = 0
 # Cant be statically typed because importing the classes causes circular imports
 
 class EditorSignals(QObject):
@@ -23,7 +41,7 @@ class EditorSignals(QObject):
     widgetRemoved = Signal(object)
     widgetCopied = Signal(object)
     widgetCut = Signal(object)
-
+    
     # Recieves any widget model, and the section model to add the instance of DraggableContainer to
     widgetShouldLoad = Signal(object, object)
 
@@ -32,5 +50,11 @@ class EditorSignals(QObject):
 
     # Recieves nothing, used by autosaver
     changeMade = Signal()
+
+    # Clear Selection
+    loseFocus = Signal()
+
+    # used for checking if a toggle should be toggled off
+    checkMade = Signal()
 
 editorSignalsInstance = EditorSignals()

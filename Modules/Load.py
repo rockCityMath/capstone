@@ -2,7 +2,7 @@ import pickle
 import os
 
 from Modules.Save import Autosaver
-
+import pyautogui
 from PySide6.QtWidgets import *
 from PySide6.QtCore import *
 from PySide6.QtGui import *
@@ -13,8 +13,8 @@ from Models.NotebookModel import NotebookModel
 def new(editor):
     print("RAN NEW")
     destroy(editor)
-
-    editor.notebook = NotebookModel('Untitled')
+    p_name = pyautogui.prompt("Enter Notebook Name")
+    editor.notebook = NotebookModel(p_name)
     editor.notebookTitleView.setText(editor.notebook.title)
     editor.selected = None
     editor.autosaver = Autosaver(editor)
@@ -23,6 +23,8 @@ def new(editor):
 # Loads models.notebook.Notebook class from file
 def load(editor):
     print("LOADING")
+
+    # Open file dialog for selecting notebook file
     path, accept = QFileDialog.getOpenFileName(
         editor,
         'Open Notebook',
@@ -47,6 +49,7 @@ def load(editor):
 def load_most_recent_notebook(editor):
 
     print("LOAD RECENT RAN")
+    # Search for most recent notebook file
     files = []
     saves_directory = os.path.join(os.getcwd(), 'Saves')
     for file in os.listdir(saves_directory):
@@ -60,6 +63,7 @@ def load_most_recent_notebook(editor):
         if (f.endswith(".on") or f.endswith(".ontemp")):
             print("FOUND: " + str(f))
             try:
+                # Open and load the notebook
                 # prob need load from file function, dup functionality
                 file = open(os.path.join(os.getcwd() + "\\Saves", f), 'rb')
                 destroy(editor)
